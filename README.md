@@ -146,6 +146,11 @@ To cut a release:
     git tag v1.0.1
     git push origin v1.0.1
 
+Or publish a release with a new `v1.0.1` tag in the GitHub web UI: the
+workflow attaches the `.pbw` to it and keeps its title and notes. To attach
+the `.pbw` to an existing release again, run the Release workflow manually
+(Actions → Release → Run workflow) with its tag.
+
 Keep `version` in `package.json` at the latest release so local builds report
 it too.
 ### Generated files

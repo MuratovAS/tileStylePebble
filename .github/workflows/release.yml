@@ -1,9 +1,19 @@
 name: Release
 
+# Works both ways:
+# - `git push origin v1.2.3`: builds and creates the release;
+# - a release published in the web UI (which creates the tag): builds and
+#   attaches the .pbw to that release, keeping its title and notes.
+# Run it manually with a tag to (re)attach the .pbw to an existing release.
+
 on:
   push:
     tags: ["v*"]
-  workflow_dispatch: # re-run for an existing tag: pick the tag under "Use workflow from"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag, e.g. v1.2.3
+        required: true
 
 permissions:
   contents: read
@@ -17,16 +27,20 @@ jobs:
     name: Version from tag
     runs-on: ubuntu-24.04
     outputs:
+      tag: ${{ steps.check.outputs.tag }}
       version: ${{ steps.check.outputs.version }}
     steps:
       - id: check
+        env:
+          TAG: ${{ inputs.tag || github.ref_name }}
         run: |
           # v1.2.3 or v1.2.3-beta.1; the watch shows major.minor, each 0..255
-          if [[ "$GITHUB_REF" =~ ^refs/tags/v((0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?)$ ]] \
+          if [[ "$TAG" =~ ^v((0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?)$ ]] \
               && (( BASH_REMATCH[2] <= 255 && BASH_REMATCH[3] <= 255 )); then
+            echo "tag=$TAG" >> "$GITHUB_OUTPUT"
             echo "version=${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"
           else
-            echo "::error::$GITHUB_REF is not a release tag like v1.2.3 (major and minor 0..255)"
+            echo "::error::$TAG is not a release tag like v1.2.3 (major and minor 0..255)"
             exit 1
           fi
 
@@ -34,6 +48,7 @@ jobs:
     needs: version
     uses: ./.github/workflows/ci.yml
     with:
+      ref: refs/tags/${{ needs.version.outputs.tag }}
       version: ${{ needs.version.outputs.version }}
 
   release:
@@ -45,14 +60,19 @@ jobs:
       - uses: actions/download-artifact@v8
         with:
           name: tilestyle.pbw
-      - name: Create GitHub release
+      - name: Create the release or attach to it
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ needs.version.outputs.tag }}
           VERSION: ${{ needs.version.outputs.version }}
         run: |
-          mv tilestyle.pbw "tilestyle-$VERSION.pbw"
-          flags=()
-          if [[ "$VERSION" == *-* ]]; then flags+=(--prerelease); fi # e.g. 1.1.0-beta.1
-          gh release create "$GITHUB_REF_NAME" "tilestyle-$VERSION.pbw" \
-            --repo "$GITHUB_REPOSITORY" --title "$GITHUB_REF_NAME" \
-            --generate-notes --verify-tag "${flags[@]}"
+          file="tilestyle-$VERSION.pbw"
+          mv tilestyle.pbw "$file"
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            gh release upload "$TAG" "$file" --clobber
+          else
+            flags=()
+            if [[ "$VERSION" == *-* ]]; then flags+=(--prerelease); fi # e.g. 1.1.0-beta.1
+            gh release create "$TAG" "$file" --title "$TAG" --generate-notes --verify-tag "${flags[@]}"
+          fi
