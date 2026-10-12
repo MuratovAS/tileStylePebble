@@ -7,14 +7,11 @@ each block with a widget: time, date, weather, health and more. Inspired by
 fonts and icons.
 
 <p>
-  <img src="screenshots/timestyle.png" alt="TimeStyle preset" width="200">
-  <img src="screenshots/dashboard.png" alt="Dashboard preset" width="200">
-  <img src="screenshots/world.png" alt="World preset" width="200">
+  <img src="assets/settings-desktop.png" alt="Settings page: preview, layouts and block options" width="820">
 </p>
 <p>
-  <img src="screenshots/sport.png" alt="Sport preset" width="200">
-  <img src="screenshots/paper.png" alt="Paper preset" width="200">
-  <img src="screenshots/neon.png" alt="Neon preset" width="200">
+  <img src="assets/settings-mobile-1.png" alt="Settings page on a phone: widget picker" width="300">
+  <img src="assets/settings-mobile-2.png" alt="Settings page on a phone: theme and general settings" width="300">
 </p>
 
 ## Features
@@ -60,14 +57,6 @@ Until it is configured, the watch shows the TimeStyle layout.
 
 The page is available in English and Russian. It follows the browser language;
 use the EN / RU switch in the header or `?lang=en` to change it.
-
-<p>
-  <img src="screenshots/settings-desktop.png" alt="Settings page: preview, layouts and block options" width="820">
-</p>
-<p>
-  <img src="screenshots/settings-mobile-1.png" alt="Settings page on a phone: widget picker" width="300">
-  <img src="screenshots/settings-mobile-2.png" alt="Settings page on a phone: theme and general settings" width="300">
-</p>
 
 ## Building
 
