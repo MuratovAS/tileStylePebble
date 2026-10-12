@@ -1,0 +1,55 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch: # re-run for an existing tag: pick the tag under "Use workflow from"
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  version:
+    name: Check tag against package.json
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.check.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: check
+        run: |
+          version=$(jq -r .version package.json)
+          if [[ "$GITHUB_REF" != "refs/tags/v$version" ]]; then
+            echo "::error::$GITHUB_REF does not match package.json version $version (expected tag v$version)"
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+  ci:
+    needs: version
+    uses: ./.github/workflows/ci.yml
+
+  release:
+    needs: [version, ci]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: tilestyle.pbw
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          mv tilestyle.pbw "tilestyle-$VERSION.pbw"
+          flags=()
+          if [[ "$VERSION" == *-* ]]; then flags+=(--prerelease); fi # e.g. 1.1.0-beta.1
+          gh release create "$GITHUB_REF_NAME" "tilestyle-$VERSION.pbw" \
+            --repo "$GITHUB_REPOSITORY" --title "TileStyle $VERSION" \
+            --generate-notes --verify-tag "${flags[@]}"

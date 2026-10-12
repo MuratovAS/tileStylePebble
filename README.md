@@ -1,5 +1,7 @@
 # TileStyle
 
+[![CI](https://github.com/MuratovAS/tileStylePebble/actions/workflows/ci.yml/badge.svg)](https://github.com/MuratovAS/tileStylePebble/actions/workflows/ci.yml)
+
 A fully customizable watchface for Pebble Time 2 (platform `emery`, 200×228,
 64 colors). Split the screen into a 4×4 grid, merge cells into blocks and fill
 each block with a widget: time, date, weather, health and more. Inspired by
@@ -124,6 +126,26 @@ emulator screenshot against the preview pixel by pixel:
     touch src/c/*.c                         # waf ignores environment changes
     DEMO=1 DEMO_TIME=1791799717 pebble build
     pebble screenshot --emulator emery --no-correction shot.png
+
+### CI and releases
+
+GitHub Actions (`.github/workflows/`):
+
+- `ci.yml` runs on every push and pull request. It runs the tests and builds
+  the watchface; a compiler warning in `src/c/` fails the build. The `.pbw` is
+  attached to the run as the `tilestyle.pbw` artifact.
+- `release.yml` runs on `v*` tags. It runs CI, checks that the tag matches
+  `version` in `package.json`, and publishes a GitHub release with
+  `tilestyle-<version>.pbw`.
+- The `gh-pages` branch has its own workflow that runs the same tests against
+  `main` when the settings page changes.
+
+To cut a release:
+
+    npm version 1.0.1 --no-git-tag-version   # bump package.json and the lock file
+    git commit -am "Release 1.0.1"
+    git tag v1.0.1
+    git push origin main v1.0.1
 
 ### Generated files
 

@@ -1,0 +1,54 @@
+name: Set up Pebble SDK
+description: >
+  Install pebble-tool (via uv) and a pinned Pebble SDK, caching the SDK between
+  runs. Node.js must already be on PATH (the SDK installs its JS bundler with npm).
+
+inputs:
+  sdk-version:
+    description: Pebble SDK version
+    default: "4.33.1"
+  pebble-tool-version:
+    description: pebble-tool version from PyPI
+    default: "5.0.40"
+  python-version:
+    description: Python used for pebble-tool and the SDK venv (uv-managed)
+    default: "3.13"
+
+runs:
+  using: composite
+  steps:
+    - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+      with:
+        enable-cache: false
+
+    - name: Install pebble-tool
+      id: tool
+      shell: bash
+      run: |
+        uv tool install --managed-python --python "${{ inputs.python-version }}" \
+          "pebble-tool==${{ inputs.pebble-tool-version }}"
+        python="$(uv tool dir)/pebble-tool/bin/python"
+        # pebble checks for a `python3` on PATH; provide the same interpreter
+        bin="$RUNNER_TEMP/pebble-bin"
+        mkdir -p "$bin" && ln -sf "$python" "$bin/python3"
+        { uv tool dir --bin; echo "$bin"; } >> "$GITHUB_PATH"
+        # The SDK venv links to this exact interpreter, so key the cache on it
+        echo "python=$("$python" -c 'import platform; print(platform.python_version())')" >> "$GITHUB_OUTPUT"
+
+    - name: Cache Pebble SDK
+      id: cache
+      uses: actions/cache@v6
+      with:
+        path: ~/.local/share/pebble-sdk/SDKs
+        key: pebble-sdk-${{ inputs.sdk-version }}-${{ runner.os }}-${{ runner.arch }}-py${{ steps.tool.outputs.python }}
+
+    - name: Install Pebble SDK
+      if: steps.cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: pebble sdk install "${{ inputs.sdk-version }}"
+
+    - name: Activate Pebble SDK
+      shell: bash
+      run: |
+        pebble sdk activate "${{ inputs.sdk-version }}"
+        pebble --version

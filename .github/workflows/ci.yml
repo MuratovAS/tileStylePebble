@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"] # tags are handled by release.yml
+  pull_request:
+  workflow_call: # reused by release.yml
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash # -eo pipefail
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check out the settings page (gh-pages) into config/
+        uses: actions/checkout@v7
+        with:
+          ref: gh-pages
+          path: config
+      - uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+          cache: npm
+      - run: npm ci
+      - run: node tools/test_protocol.js
+      - run: node tools/test_pkjs.js
+
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: lts/*
+          cache: npm
+      - uses: ./.github/actions/setup-pebble
+      - run: npm ci
+      - name: Build
+        run: pebble build 2>&1 | tee build.log
+      - name: Fail on compiler warnings in src/c
+        run: |
+          # gcc prints "../src/c/file.c:LINE:COL: warning: ..."; the linker's
+          # "LOAD segment with RWX permissions" warning does not match this.
+          pattern='^(\.\./)?(src/c/[^:]+):([0-9]+):([0-9]+): warning: (.*)$'
+          if grep -qE "$pattern" build.log; then
+            sed -nE "s#$pattern#::error file=\2,line=\3,col=\4::\5#p" build.log
+            exit 1
+          fi
+      - name: Rename bundle
+        # pebble names the bundle after the checkout directory
+        run: mv build/*.pbw tilestyle.pbw
+      - uses: actions/upload-artifact@v7
+        with:
+          path: tilestyle.pbw
+          archive: false # artifact is the .pbw itself, named tilestyle.pbw
+          if-no-files-found: error
