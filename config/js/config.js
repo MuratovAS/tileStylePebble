@@ -401,21 +401,29 @@
     $('#handles').innerHTML = html;
   }
 
+  // A drag is followed on the document, not on the handle: renderHandles()
+  // replaces the handle on every move, which drops its pointer capture, and
+  // a release outside the handles would then be missed, leaving the drag on.
   function bindHandles() {
     var box = $('#handles');
 
     box.addEventListener('pointerdown', function (e) {
       var h = e.target.closest('.gh');
-      if (!h) return;
+      if (!h || resize) return;
       e.preventDefault();
-      try { h.setPointerCapture(e.pointerId); } catch (err) { /* old webviews */ }
-      resize = { axis: h.getAttribute('data-axis'), i: Number(h.getAttribute('data-i')), before: snapshot(), changed: false };
+      resize = { axis: h.getAttribute('data-axis'), i: Number(h.getAttribute('data-i')), before: snapshot(), changed: false,
+                 pointer: e.pointerId };
+      document.addEventListener('pointermove', move);
+      document.addEventListener('pointerup', end);
+      document.addEventListener('pointercancel', end);
       renderHandles();
       renderOverlay();
     });
 
-    box.addEventListener('pointermove', function (e) {
-      if (!resize) return;
+    function move(e) {
+      if (!resize || e.pointerId !== resize.pointer) return;
+      // released where no pointerup reached the page (outside the window)
+      if (e.pointerType === 'mouse' && !(e.buttons & 1)) return end(e);
       var p = screenPoint(e);
       var axis = resize.axis;
       var pos = axis === 'cols' ? p.x : p.y;
@@ -430,10 +438,13 @@
       renderOverlay();
       renderHandles();
       renderToolbar();
-    });
+    }
 
-    var end = function () {
-      if (!resize) return;
+    function end(e) {
+      if (!resize || e.pointerId !== resize.pointer) return;
+      document.removeEventListener('pointermove', move);
+      document.removeEventListener('pointerup', end);
+      document.removeEventListener('pointercancel', end);
       // the handle may have been dragged and returned; no history step needed then
       if (resize.changed && JSON.stringify(resize.before.grid) !== JSON.stringify(state.grid)) {
         history.push(resize.before);
@@ -442,9 +453,7 @@
       }
       resize = null;
       render();
-    };
-    box.addEventListener('pointerup', end);
-    box.addEventListener('pointercancel', end);
+    }
   }
 
   function isEqualGrid() {
