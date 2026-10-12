@@ -5,6 +5,8 @@ name: Release
 # - a release published in the web UI (which creates the tag): builds and
 #   attaches the .pbw to that release, keeping its title and notes.
 # Run it manually with a tag to (re)attach the .pbw to an existing release.
+# Before the release, pages.yml publishes the tag's settings page to
+# gh-pages/vX.Y.Z/, which the .pbw built here opens.
 
 on:
   push:
@@ -34,13 +36,14 @@ jobs:
         env:
           TAG: ${{ inputs.tag || github.ref_name }}
         run: |
-          # v1.2.3 or v1.2.3-beta.1; the watch shows major.minor, each 0..255
+          # v1.2.3 or v1.2.3-beta.1; the watch shows major.minor, each 0..255;
+          # 0.0.0 marks local builds (see wscript)
           if [[ "$TAG" =~ ^v((0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?)$ ]] \
-              && (( BASH_REMATCH[2] <= 255 && BASH_REMATCH[3] <= 255 )); then
+              && (( BASH_REMATCH[2] <= 255 && BASH_REMATCH[3] <= 255 )) && [[ "${BASH_REMATCH[1]}" != 0.0.0 ]]; then
             echo "tag=$TAG" >> "$GITHUB_OUTPUT"
             echo "version=${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"
           else
-            echo "::error::$TAG is not a release tag like v1.2.3 (major and minor 0..255)"
+            echo "::error::$TAG is not a release tag like v1.2.3 (major and minor 0..255, not v0.0.0)"
             exit 1
           fi
 
@@ -51,8 +54,16 @@ jobs:
       ref: refs/tags/${{ needs.version.outputs.tag }}
       version: ${{ needs.version.outputs.version }}
 
-  release:
+  pages:
     needs: [version, ci]
+    permissions:
+      contents: write
+    uses: ./.github/workflows/pages.yml
+    with:
+      tag: ${{ needs.version.outputs.tag }}
+
+  release:
+    needs: [version, ci, pages]
     runs-on: ubuntu-24.04
     permissions:
       contents: write

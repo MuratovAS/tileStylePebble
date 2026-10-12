@@ -10,7 +10,16 @@
 var protocol = require('./protocol');
 var weather = require('./weather');
 
-var CONFIG_URL = 'https://muratovas.github.io/tileStylePebble/';
+// Settings page this build opens: chosen by wscript (the snapshot of this
+// version on GitHub Pages, see config_url there); outside a Pebble build
+// (tests) there is no build_info, and the site's base URL stands in
+var CONFIG_URL = (function () {
+  try {
+    return require('build_info').configUrl;
+  } catch (e) {
+    return 'https://muratovas.github.io/tileStylePebble/';
+  }
+})();
 var SETTINGS_KEY = 'tilestyle.settings';
 var WEATHER_CACHE_KEY = 'tilestyle.weather';
 

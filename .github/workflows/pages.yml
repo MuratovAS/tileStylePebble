@@ -1,0 +1,63 @@
+name: Pages
+
+# Publishes the settings page (config/) of a release to the gh-pages branch,
+# served by GitHub Pages. The branch holds only snapshots: vX.Y.Z/ is config/
+# as of tag vX.Y.Z, and the .pbw of that release opens it (see config_url in
+# wscript). Written once: a published snapshot is never replaced.
+# Called by release.yml; runs one at a time, as each run pushes to gh-pages.
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        description: Release tag, e.g. v1.2.3
+        type: string
+        required: true
+
+permissions:
+  contents: write
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    concurrency:
+      group: gh-pages
+      cancel-in-progress: false
+    steps:
+      - name: Check out the release
+        uses: actions/checkout@v7
+        with:
+          ref: refs/tags/${{ inputs.tag }}
+          path: src
+      - name: Check out gh-pages
+        uses: actions/checkout@v7
+        with:
+          ref: gh-pages
+          path: site
+      - name: Add the snapshot
+        working-directory: site
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          if [[ -e "$TAG" ]]; then
+            echo "::notice::$TAG/ is already published and is kept as is"
+          else
+            cp -r ../src/config "$TAG"
+          fi
+          # nothing but snapshots (and .nojekyll: serve the files as they are)
+          find . -mindepth 1 -maxdepth 1 ! -name .git ! -name 'v[0-9]*' -exec rm -rf {} +
+          touch .nojekyll
+
+          git add -A
+          if git diff --cached --quiet; then
+            echo "gh-pages is up to date"
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -q -m "Publish the settings page of $TAG"
+          git push origin HEAD:gh-pages

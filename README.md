@@ -80,19 +80,22 @@ To run it:
     pebble install --emulator emery         # Pebble Time 2 emulator
     pebble install --phone <phone IP>       # real watch, via the Pebble app
 
-The settings page (branch `gh-pages`) is checked out into `config/` as a
-worktree. The watchface builds without it, but the generators and tests in
-`tools/` need it:
-
-    git worktree add config gh-pages
-
 ## Repository layout
 
-The branches follow TimeStyle:
+- `main`: the watchface (watch and phone code, resources, tools) and the
+  settings page under development in `config/`.
+- `gh-pages`: what GitHub Pages serves, written only by the release workflow:
+  a snapshot of `config/` per release in `vX.Y.Z/`.
 
-- `main`: the watchface, with watch and phone code, resources and tools.
-- `gh-pages`: the settings page, plain static HTML with no build step,
-  served by GitHub Pages. Commit page changes from `config/`.
+Each build opens the settings page of its own version, so a release keeps
+working when the page changes later. `wscript` writes the page URL into the
+phone code (`build/js/build_info.json`):
+
+| Build | Settings page |
+|---|---|
+| release workflow (`package.json` version set from the tag) | `https://muratovas.github.io/tileStylePebble/v<version>/` |
+| `pebble build` (version `0.0.0`, as committed) | `config/index.html` of this checkout as a `file://` URL: works with `pebble emu-app-config` |
+| `CONFIG_URL=http://192.168.1.10:8000/ pebble build` | that URL, e.g. for a real phone, with `config/` served by `python3 -m http.server -d config` |
 
 | Path | Contents |
 |---|---|
@@ -101,7 +104,7 @@ The branches follow TimeStyle:
 | `src/pkjs/` | phone code: opens the settings page, encodes settings into the binary format, fetches weather from Open-Meteo, queues messages |
 | `resources/` | clock digit fonts (`.ffont`) and icons in 14/18/25/36/50 px, with their sources |
 | `tools/` | resource and table generators, tests, sending settings to the emulator |
-| `config/` | the settings page, a `gh-pages` worktree (ignored in `main`) |
+| `config/` | the settings page: static HTML with no build step; the UI is in English and Russian (`js/i18n.js`: `?lang=en\|ru`, then the EN / RU switch, else the browser language) |
 
 The C widgets are line-by-line ports of `config/js/widgets.js` and
 `config/js/raster.js`. That is why the watch draws what the preview shows, and
@@ -138,8 +141,10 @@ GitHub Actions (`.github/workflows/`):
   into `package.json` before building, then the workflow publishes a GitHub
   release with `tilestyle-<version>.pbw`. The tag must look like `v1.2.3` or
   `v1.2.3-beta.1`; the watch shows only major.minor (0–255 each).
-- The `gh-pages` branch has its own workflow that runs the same tests against
-  `main` when the settings page changes.
+- `pages.yml`, called by `release.yml` before the release, copies `config/`
+  of the tag to `gh-pages/vX.Y.Z/`. A published snapshot is never replaced,
+  so re-running a release keeps its page; to change it, delete the folder from
+  `gh-pages` first.
 
 To cut a release:
 
@@ -151,8 +156,8 @@ workflow attaches the `.pbw` to it and keeps its title and notes. To attach
 the `.pbw` to an existing release again, run the Release workflow manually
 (Actions → Release → Run workflow) with its tag.
 
-Keep `version` in `package.json` at the latest release so local builds report
-it too.
+`version` in `package.json` stays `0.0.0`: it marks a build made outside the
+release workflow (the watch shows 0.0), so the tag `v0.0.0` is rejected.
 ### Generated files
 
 Don't edit these by hand; regenerate them:

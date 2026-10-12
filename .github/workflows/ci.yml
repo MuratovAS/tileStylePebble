@@ -11,7 +11,9 @@ on:
         type: string
         default: ""
       version:
-        description: Version to stamp into package.json before building (from the release tag)
+        description: >-
+          Version to stamp into package.json before building (from the release tag);
+          the build then opens the settings page snapshot of v<version> (see wscript)
         type: string
         default: ""
 
@@ -29,11 +31,6 @@ jobs:
       - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref }}
-      - name: Check out the settings page (gh-pages) into config/
-        uses: actions/checkout@v7
-        with:
-          ref: gh-pages
-          path: config
       - uses: actions/setup-node@v7
         with:
           node-version: lts/*

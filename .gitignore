@@ -15,5 +15,3 @@ tools/_icon_sources.js
 .idea/
 .DS_Store
 
-# settings page: gh-pages worktree (git worktree add config gh-pages)
-/config/

@@ -16,7 +16,7 @@
  *          --live-weather <lat,lon> fetch from Open-Meteo now
  * output:  default "<name> <hex>" per line; --c-array C arrays; --json
  *
- * Presets are read from config/js/presets.js (the gh-pages worktree).
+ * Presets are read from config/js/presets.js (the settings page).
  */
 'use strict';
 
