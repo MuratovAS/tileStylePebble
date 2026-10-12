@@ -3,7 +3,8 @@ name: Pages
 # Publishes the settings page (config/) of a release to the gh-pages branch,
 # served by GitHub Pages. The branch holds only snapshots: vX.Y.Z/ is config/
 # as of tag vX.Y.Z, and the .pbw of that release opens it (see config_url in
-# wscript). Written once: a published snapshot is never replaced.
+# wscript). Written once: a published snapshot is never replaced. The root
+# index.html is a placeholder linking to the repository.
 # Called by release.yml; runs one at a time, as each run pushes to gh-pages.
 
 on:
@@ -42,14 +43,24 @@ jobs:
         working-directory: site
         env:
           TAG: ${{ inputs.tag }}
+          REPO_URL: ${{ github.server_url }}/${{ github.repository }}
         run: |
           if [[ -e "$TAG" ]]; then
             echo "::notice::$TAG/ is already published and is kept as is"
           else
             cp -r ../src/config "$TAG"
           fi
-          # nothing but snapshots (and .nojekyll: serve the files as they are)
+          # nothing but snapshots, a placeholder index.html pointing to the
+          # project, and .nojekyll (serve the files as they are)
           find . -mindepth 1 -maxdepth 1 ! -name .git ! -name 'v[0-9]*' -exec rm -rf {} +
+          cat > index.html <<EOF
+          <!DOCTYPE html>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1">
+          <title>TileStyle</title>
+          <p>Settings pages of the <a href="$REPO_URL">TileStyle</a> Pebble watchface.
+          Each release opens its own page from the watch app.</p>
+          EOF
           touch .nojekyll
 
           git add -A

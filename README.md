@@ -85,7 +85,8 @@ To run it:
 - `main`: the watchface (watch and phone code, resources, tools) and the
   settings page under development in `config/`.
 - `gh-pages`: what GitHub Pages serves, written only by the release workflow:
-  a snapshot of `config/` per release in `vX.Y.Z/`.
+  a snapshot of `config/` per release in `vX.Y.Z/`, and a placeholder
+  `index.html` at the root that links to this repository.
 
 Each build opens the settings page of its own version, so a release keeps
 working when the page changes later. `wscript` writes the page URL into the
