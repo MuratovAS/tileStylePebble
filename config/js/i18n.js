@@ -220,6 +220,7 @@
       'Right': 'Справа',
 
       // --- built-in layouts (presets.js) ---
+      'Lime': 'Лайм',
       'Centered': 'По центру',
       'Dashboard': 'Дашборд',
       'Minimal': 'Минимализм',

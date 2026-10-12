@@ -20,7 +20,26 @@
       bg: ORANGE.bg, fg: ORANGE.fg, accent: ORANGE.accent };
   }
 
+  var LIME = { bg: '#55FF00' };
+
   root.Presets = [
+    {
+      // white face, LECO digits, a lime column of stats on the left
+      key: 'lime',
+      name: 'Lime',
+      grid: { cols: [44, 38, 77, 41], rows: [26, 96, 86, 20] },
+      theme: { bg: '#FFFFFF', tile: null, fg: '#000000', accent: '#000000', iconFill: '#FFFFFF', gap: 0, radius: 0,
+        lineOn: true, lineWidth: 1, lineColor: '#FFFFFF', lineStyle: 'dotted' },
+      layout: [
+        blk(0, 0, 1, 1, 'battery', { style: 'icon', align: 'center' }, LIME),
+        blk(1, 0, 1, 1, 'bluetooth', { only_lost: true, align: 'center' }, { fg: '#AAAAAA', accent: '#AAAAAA' }),
+        blk(2, 0, 2, 1, 'date', { format: 'd_m_Y', pattern: '%a %e %b', upper: true, align: 'right' }, { fg: '#AAAAAA' }),
+        blk(0, 1, 1, 1, 'forecast', { align: 'center' }, LIME),
+        blk(1, 1, 3, 3, 'time', { font: 'leco', stack: 'auto', zero: true, aa: false, align: 'center' }),
+        blk(0, 2, 1, 1, 'steps', { goal: 10000, short: true, align: 'center' }, LIME),
+        blk(0, 3, 1, 1, 'heart', { align: 'center' }, LIME)
+      ]
+    },
     {
       key: 'timestyle',
       name: 'TimeStyle',

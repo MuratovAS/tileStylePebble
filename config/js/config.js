@@ -30,8 +30,11 @@
     lineStyle: 'solid'  // solid | dashed | dotted
   };
 
+  // the layout used before the first config, as on the watch (src/c/settings.c)
+  var DEFAULT_PRESET = Presets.filter(function (p) { return p.key === 'timestyle'; })[0];
+
   function fullTheme(t) {
-    return Object.assign(clone(THEME_DEFAULTS), clone(Presets[0].theme), clone(t || {}));
+    return Object.assign(clone(THEME_DEFAULTS), clone(DEFAULT_PRESET.theme), clone(t || {}));
   }
 
   var DEFAULT_GENERAL = {
@@ -108,13 +111,13 @@
   }
 
   function applyPreset(p) {
-    state.blocks = Layout.hydrate(p.layout) || Layout.hydrate(Presets[0].layout);
+    state.blocks = Layout.hydrate(p.layout) || Layout.hydrate(DEFAULT_PRESET.layout);
     state.grid = W.normalizeGrid(p.grid, Layout.COLS, Layout.ROWS);
     if (p.theme) state.theme = fullTheme(p.theme);
   }
 
   function loadInitial() {
-    applyPreset(Presets[0]);
+    applyPreset(DEFAULT_PRESET);
     state.general = clone(DEFAULT_GENERAL);
 
     // pkjs may pass the current settings in ?config=, otherwise use
@@ -263,7 +266,7 @@
       e.preventDefault();
       try { overlay.setPointerCapture(e.pointerId); } catch (err) { /* old webviews */ }
       var c = cellFromEvent(e);
-      drag = { start: c, last: c };
+      drag = { start: c, last: c, prev: state.sel };
       selectCells(c, c);
       renderOverlay();
     });
@@ -279,6 +282,12 @@
 
     var end = function () {
       if (!drag) return;
+      // a plain click on the already selected area clears the selection
+      var p = drag.prev, s = state.sel;
+      if (drag.last.x === drag.start.x && drag.last.y === drag.start.y && p && s &&
+          p.x === s.x && p.y === s.y && p.w === s.w && p.h === s.h) {
+        state.sel = null;
+      }
       drag = null;
       render();
     };
@@ -1148,7 +1157,15 @@
       if (btn) setLanguage(btn.getAttribute('data-lang'));
     });
     document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') closeSheets();
+      if (e.key === 'Escape') {
+        var sheetOpen = $$('.sheet').some(function (sh) { return !sh.hidden; });
+        if (sheetOpen) {
+          closeSheets();
+        } else if (state.sel && !/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) {
+          state.sel = null;
+          render();
+        }
+      }
       if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) {
         e.preventDefault();
         undo();
