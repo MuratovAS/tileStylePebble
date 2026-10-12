@@ -1,0 +1,823 @@
+{
+  "name": "tilestyle",
+  "author": "MuratovAS",
+  "version": "1.0.0",
+  "keywords": [
+    "pebble-watchface"
+  ],
+  "private": true,
+  "dependencies": {
+    "pebble-fctx": "^1.6.5"
+  },
+  "pebble": {
+    "displayName": "TileStyle",
+    "uuid": "c772c32e-6dff-412b-8ecf-6ed72ab1ecb7",
+    "sdkVersion": "3",
+    "enableMultiJS": true,
+    "targetPlatforms": [
+      "emery"
+    ],
+    "capabilities": [
+      "location",
+      "health",
+      "configurable"
+    ],
+    "watchapp": {
+      "watchface": true
+    },
+    "messageKeys": [
+      "Config",
+      "Weather",
+      "WeatherRequest"
+    ],
+    "resources": {
+      "media": [
+        {
+          "file": "fonts/AvenirNextRegular.ffont",
+          "name": "AVENIR_REGULAR_FFONT",
+          "type": "raw"
+        },
+        {
+          "file": "fonts/AvenirNextDemiBold.ffont",
+          "name": "AVENIR_BOLD_FFONT",
+          "type": "raw"
+        },
+        {
+          "file": "fonts/LECO1976-Regular.ffont",
+          "name": "LECO_REGULAR_FFONT",
+          "type": "raw"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_BATTERY_CHARGE_14",
+          "file": "icons/battery_charge_14.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_BATTERY_CHARGE_18",
+          "file": "icons/battery_charge_18.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_BATTERY_CHARGE_25",
+          "file": "icons/battery_charge_25.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_BATTERY_CHARGE_36",
+          "file": "icons/battery_charge_36.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_BATTERY_CHARGE_50",
+          "file": "icons/battery_charge_50.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_BATTERY_FRAME_14",
+          "file": "icons/battery_frame_14.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_BATTERY_FRAME_18",
+          "file": "icons/battery_frame_18.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_BATTERY_FRAME_25",
+          "file": "icons/battery_frame_25.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_BATTERY_FRAME_36",
+          "file": "icons/battery_frame_36.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_BATTERY_FRAME_50",
+          "file": "icons/battery_frame_50.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_BLUETOOTH_14",
+          "file": "icons/bluetooth_14.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_BLUETOOTH_18",
+          "file": "icons/bluetooth_18.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_BLUETOOTH_25",
+          "file": "icons/bluetooth_25.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_BLUETOOTH_36",
+          "file": "icons/bluetooth_36.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_BLUETOOTH_50",
+          "file": "icons/bluetooth_50.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_BLUETOOTH_OFF_14",
+          "file": "icons/bluetooth_off_14.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_BLUETOOTH_OFF_18",
+          "file": "icons/bluetooth_off_18.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_BLUETOOTH_OFF_25",
+          "file": "icons/bluetooth_off_25.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_BLUETOOTH_OFF_36",
+          "file": "icons/bluetooth_off_36.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_BLUETOOTH_OFF_50",
+          "file": "icons/bluetooth_off_50.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_CALORIES_14",
+          "file": "icons/calories_14.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_CALORIES_18",
+          "file": "icons/calories_18.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_CALORIES_25",
+          "file": "icons/calories_25.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_CALORIES_36",
+          "file": "icons/calories_36.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_CALORIES_50",
+          "file": "icons/calories_50.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_DISTANCE_14",
+          "file": "icons/distance_14.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_DISTANCE_18",
+          "file": "icons/distance_18.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_DISTANCE_25",
+          "file": "icons/distance_25.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_DISTANCE_36",
+          "file": "icons/distance_36.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_DISTANCE_50",
+          "file": "icons/distance_50.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_HEART_14",
+          "file": "icons/heart_14.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_HEART_18",
+          "file": "icons/heart_18.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_HEART_25",
+          "file": "icons/heart_25.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_HEART_36",
+          "file": "icons/heart_36.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_HEART_50",
+          "file": "icons/heart_50.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_SLEEP_14",
+          "file": "icons/sleep_14.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_SLEEP_18",
+          "file": "icons/sleep_18.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_SLEEP_25",
+          "file": "icons/sleep_25.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_SLEEP_36",
+          "file": "icons/sleep_36.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_SLEEP_50",
+          "file": "icons/sleep_50.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_STEPS_14",
+          "file": "icons/steps_14.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_STEPS_18",
+          "file": "icons/steps_18.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_STEPS_25",
+          "file": "icons/steps_25.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_STEPS_36",
+          "file": "icons/steps_36.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_STEPS_50",
+          "file": "icons/steps_50.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_UV_14",
+          "file": "icons/uv_14.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_UV_18",
+          "file": "icons/uv_18.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_UV_25",
+          "file": "icons/uv_25.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_UV_36",
+          "file": "icons/uv_36.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_UV_50",
+          "file": "icons/uv_50.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_CLEAR_DAY_14",
+          "file": "icons/weather_clear_day_14.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_CLEAR_DAY_18",
+          "file": "icons/weather_clear_day_18.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_CLEAR_DAY_25",
+          "file": "icons/weather_clear_day_25.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_CLEAR_DAY_36",
+          "file": "icons/weather_clear_day_36.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_CLEAR_DAY_50",
+          "file": "icons/weather_clear_day_50.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_CLEAR_NIGHT_14",
+          "file": "icons/weather_clear_night_14.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_CLEAR_NIGHT_18",
+          "file": "icons/weather_clear_night_18.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_CLEAR_NIGHT_25",
+          "file": "icons/weather_clear_night_25.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_CLEAR_NIGHT_36",
+          "file": "icons/weather_clear_night_36.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_CLEAR_NIGHT_50",
+          "file": "icons/weather_clear_night_50.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_CLOUDY_14",
+          "file": "icons/weather_cloudy_14.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_CLOUDY_18",
+          "file": "icons/weather_cloudy_18.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_CLOUDY_25",
+          "file": "icons/weather_cloudy_25.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_CLOUDY_36",
+          "file": "icons/weather_cloudy_36.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_CLOUDY_50",
+          "file": "icons/weather_cloudy_50.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_GENERIC_14",
+          "file": "icons/weather_generic_14.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_GENERIC_18",
+          "file": "icons/weather_generic_18.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_GENERIC_25",
+          "file": "icons/weather_generic_25.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_GENERIC_36",
+          "file": "icons/weather_generic_36.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_GENERIC_50",
+          "file": "icons/weather_generic_50.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_HEAVY_RAIN_14",
+          "file": "icons/weather_heavy_rain_14.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_HEAVY_RAIN_18",
+          "file": "icons/weather_heavy_rain_18.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_HEAVY_RAIN_25",
+          "file": "icons/weather_heavy_rain_25.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_HEAVY_RAIN_36",
+          "file": "icons/weather_heavy_rain_36.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_HEAVY_RAIN_50",
+          "file": "icons/weather_heavy_rain_50.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_HEAVY_SNOW_14",
+          "file": "icons/weather_heavy_snow_14.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_HEAVY_SNOW_18",
+          "file": "icons/weather_heavy_snow_18.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_HEAVY_SNOW_25",
+          "file": "icons/weather_heavy_snow_25.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_HEAVY_SNOW_36",
+          "file": "icons/weather_heavy_snow_36.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_HEAVY_SNOW_50",
+          "file": "icons/weather_heavy_snow_50.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_LIGHT_RAIN_14",
+          "file": "icons/weather_light_rain_14.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_LIGHT_RAIN_18",
+          "file": "icons/weather_light_rain_18.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_LIGHT_RAIN_25",
+          "file": "icons/weather_light_rain_25.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_LIGHT_RAIN_36",
+          "file": "icons/weather_light_rain_36.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_LIGHT_RAIN_50",
+          "file": "icons/weather_light_rain_50.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_LIGHT_SNOW_14",
+          "file": "icons/weather_light_snow_14.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_LIGHT_SNOW_18",
+          "file": "icons/weather_light_snow_18.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_LIGHT_SNOW_25",
+          "file": "icons/weather_light_snow_25.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_LIGHT_SNOW_36",
+          "file": "icons/weather_light_snow_36.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_LIGHT_SNOW_50",
+          "file": "icons/weather_light_snow_50.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_PARTLY_CLOUDY_14",
+          "file": "icons/weather_partly_cloudy_14.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_PARTLY_CLOUDY_18",
+          "file": "icons/weather_partly_cloudy_18.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_PARTLY_CLOUDY_25",
+          "file": "icons/weather_partly_cloudy_25.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_PARTLY_CLOUDY_36",
+          "file": "icons/weather_partly_cloudy_36.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_PARTLY_CLOUDY_50",
+          "file": "icons/weather_partly_cloudy_50.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_PARTLY_CLOUDY_NIGHT_14",
+          "file": "icons/weather_partly_cloudy_night_14.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_PARTLY_CLOUDY_NIGHT_18",
+          "file": "icons/weather_partly_cloudy_night_18.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_PARTLY_CLOUDY_NIGHT_25",
+          "file": "icons/weather_partly_cloudy_night_25.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_PARTLY_CLOUDY_NIGHT_36",
+          "file": "icons/weather_partly_cloudy_night_36.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_PARTLY_CLOUDY_NIGHT_50",
+          "file": "icons/weather_partly_cloudy_night_50.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_RAIN_SNOW_14",
+          "file": "icons/weather_rain_snow_14.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_RAIN_SNOW_18",
+          "file": "icons/weather_rain_snow_18.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_RAIN_SNOW_25",
+          "file": "icons/weather_rain_snow_25.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_RAIN_SNOW_36",
+          "file": "icons/weather_rain_snow_36.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_RAIN_SNOW_50",
+          "file": "icons/weather_rain_snow_50.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_THUNDERSTORM_14",
+          "file": "icons/weather_thunderstorm_14.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_THUNDERSTORM_18",
+          "file": "icons/weather_thunderstorm_18.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_THUNDERSTORM_25",
+          "file": "icons/weather_thunderstorm_25.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_THUNDERSTORM_36",
+          "file": "icons/weather_thunderstorm_36.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        },
+        {
+          "type": "bitmap",
+          "name": "ICON_WEATHER_THUNDERSTORM_50",
+          "file": "icons/weather_thunderstorm_50.png",
+          "memoryFormat": "SmallestPalette",
+          "storageFormat": "pbi"
+        }
+      ]
+    }
+  }
+}

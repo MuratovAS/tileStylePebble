@@ -1,0 +1,52 @@
+<!doctype html>
+<!--
+  Measures the ink bounds of the clock glyphs exactly as the settings page
+  preview does (glyphBox in config/js/raster.js: rasterize the outline at
+  4 px per font unit, alpha >= 128). Run by tools/gen_tables.py in headless
+  Chromium; the result is printed into <pre id="out"> as JSON.
+-->
+<html><head><meta charset="utf-8"></head><body>
+<pre id="out"></pre>
+<script src="../config/js/fonts.js"></script>
+<script>
+(function () {
+  'use strict';
+  // keep in sync with glyphBox() in config/js/raster.js
+  function glyphBox(key, ch) {
+    var g = PebbleFonts[key].glyphs[ch];
+    if (!g || !g.d) return null;
+    var p = new Path2D(g.d);
+    var S = 4, ox = 16 * S, oy = 72 * S, size = 104 * S;
+    var cv = document.createElement('canvas');
+    cv.width = cv.height = size;
+    var ctx = cv.getContext('2d', { willReadFrequently: true });
+    ctx.translate(ox, oy);
+    ctx.scale(S, -S);
+    ctx.fill(p);
+    var d = ctx.getImageData(0, 0, size, size).data;
+    var minX = size, maxX = -1, minY = size, maxY = -1;
+    for (var y = 0; y < size; y++) {
+      for (var x = 0; x < size; x++) {
+        if (d[(y * size + x) * 4 + 3] < 128) continue;
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+    }
+    if (maxX < 0) return null;
+    return { x0: (minX - ox) / S, x1: (maxX + 1 - ox) / S, top: (oy - minY) / S, bottom: (oy - maxY - 1) / S };
+  }
+  var out = {};
+  Object.keys(PebbleFonts).forEach(function (key) {
+    var f = PebbleFonts[key];
+    out[key] = { upem: f.upem, glyphs: {} };
+    '0123456789:'.split('').forEach(function (ch) {
+      var g = f.glyphs[ch];
+      out[key].glyphs[ch] = g ? { adv: g.adv, box: glyphBox(key, ch) } : null;
+    });
+  });
+  document.getElementById('out').textContent = JSON.stringify(out);
+})();
+</script>
+</body></html>

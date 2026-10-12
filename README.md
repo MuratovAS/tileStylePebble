@@ -122,3 +122,52 @@ health and more.
 - В `opts` всегда лежат все опции виджета, включая значения по умолчанию.
 - Числовые `id` виджетов в `widgets.js` стабильны: их будет получать C-часть.
   Для отправки на часы цвета переводятся в GColor8 (`Widgets.toGColor8`).
+
+## Циферблат — `src/`
+
+Сборка (Pebble SDK 4.x, платформа `emery`):
+
+    npm install            # pebble-fctx
+    pebble build
+    pebble install --emulator emery
+
+Часы рисуют экран так же, как превью страницы настроек: та же логика выбора
+шрифта (`fit`, `inkHeight`), та же раскладка виджетов, те же иконки и фигуры.
+Код виджетов на C перенесён построчно из `config/js/widgets.js` и
+`config/js/raster.js`.
+
+| Файл | Что внутри |
+|---|---|
+| `src/c/protocol.h` | контракт телефон ↔ часы: ключи сообщений, бинарные форматы настроек и погоды, id виджетов |
+| `src/c/main.c` | окно, слой на каждый блок, линии между блоками, подписка на минуты/секунды |
+| `src/c/settings.c` | разбор и проверка блоба настроек, хранение в persist, настройки по умолчанию (раскладка TimeStyle) |
+| `src/c/data.c` | батарея, Bluetooth, Health, погода |
+| `src/c/messaging.c` | AppMessage: приём настроек и погоды, запрос погоды по интервалу |
+| `src/c/render.c` | примитивы превью (`g.*`): текст, иконки, фигуры, цифры времени через fctx |
+| `src/c/widgets.c` | все виджеты |
+| `src/c/icons.c` | ленивая загрузка иконок и перекраска палитрой |
+| `src/c/gen_tables.c`, `gen_icons.h` | сгенерировано, см. ниже |
+| `src/pkjs/index.js` | открытие страницы настроек, хранение настроек, очередь сообщений |
+| `src/pkjs/protocol.js` | JSON настроек → бинарный блоб (работает и в node) |
+| `src/pkjs/weather.js` | погода Open-Meteo: сейчас, мин/макс, УФ, почасовой прогноз на 48 ч |
+
+Сгенерированные файлы:
+
+    python3 tools/gen_tables.py          # метрики шрифтов и цифр -> src/c/gen_tables.c
+    python3 tools/icons.py resources     # иконки -> package.json и src/c/gen_icons.h
+
+Метрики берутся из тех же `config/js/sysfonts.js` и `config/js/fonts.js`,
+что и у превью; рамки цифр меряются в headless Chromium кодом превью.
+
+### Разработка
+
+    node tools/test_protocol.js && node tools/test_pkjs.js   # тесты pkjs и формата
+    node tools/encode_config.js --list-presets
+    node tools/encode_config.js --preset timestyle --demo-weather
+    python3 tools/send_appmessage.py --preset dashboard --demo-weather   # в запущенный эмулятор
+    python3 tools/send_appmessage.py --config settings.json --live-weather 55.75,37.62
+
+`DEMO=1 pebble build` подставляет тестовые данные превью (`MOCK` из
+`widgets.js`) вместо Health и погоды, `DEMO_TIME=<unix>` замораживает часы —
+так скриншот эмулятора можно сравнить с превью попиксельно. После смены этих
+переменных нужно `touch src/c/*.c`: waf не пересобирает по окружению.
