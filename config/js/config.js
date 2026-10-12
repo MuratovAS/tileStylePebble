@@ -539,6 +539,8 @@
       '<div><small>' + esc(tr('Background')) + '</small>' + swatchHTML('block.bg', b.bg, inherit, t.tile || t.bg) + '</div>' +
       '<div><small>' + esc(tr('Text')) + '</small>' + swatchHTML('block.fg', b.fg, inherit, t.fg) + '</div>' +
       '<div><small>' + esc(tr('Accent')) + '</small>' + swatchHTML('block.accent', b.accent, inherit, t.accent) + '</div>' +
+      '<div><small>' + esc(tr('Icon fill')) + '</small>' +
+        swatchHTML('block.iconFill', b.iconFill, inherit, t.iconFill || b.bg || t.tile || t.bg) + '</div>' +
       '</div>';
 
     el.innerHTML =
@@ -604,7 +606,7 @@
       if (a === 'split') splitSelection();
       if (a === 'clear') {
         var b = selectedBlock();
-        if (b) commit(function () { b.widget = 'empty'; b.opts = {}; b.bg = b.fg = b.accent = null; });
+        if (b) commit(function () { b.widget = 'empty'; b.opts = {}; b.bg = b.fg = b.accent = b.iconFill = null; });
       }
     });
 

@@ -2,7 +2,7 @@
  * Layout grid model.
  *
  * The screen is divided into COLS×ROWS cells. A layout is an array of blocks
- * {id, x, y, w, h, widget, opts, bg, fg, accent} that cover
+ * {id, x, y, w, h, widget, opts, bg, fg, accent, iconFill} that cover
  * every cell exactly once. Merging and splitting always
  * preserve this invariant.
  */
@@ -25,7 +25,8 @@
       opts: {},
       bg: null,
       fg: null,
-      accent: null
+      accent: null,
+      iconFill: null
     };
     if (extra) {
       for (var k in extra) b[k] = extra[k];
@@ -135,7 +136,8 @@
       opts: clone(donor.opts),
       bg: donor.bg,
       fg: donor.fg,
-      accent: donor.accent
+      accent: donor.accent,
+      iconFill: donor.iconFill
     });
 
     var rest = blocks.filter(function (b) {
@@ -161,7 +163,8 @@
           opts: keep ? clone(target.opts) : {},
           bg: target.bg,
           fg: target.fg,
-          accent: target.accent
+          accent: target.accent,
+          iconFill: target.iconFill
         });
         if (isFirst) first = cell;
         rest.push(cell);
@@ -200,7 +203,8 @@
         opts: clone(b.opts || {}),
         bg: b.bg || null,
         fg: b.fg || null,
-        accent: b.accent || null
+        accent: b.accent || null,
+        iconFill: b.iconFill || null
       });
     });
     return validate(blocks) ? sortBlocks(blocks) : null;
@@ -213,6 +217,7 @@
       if (b.bg) out.bg = b.bg;
       if (b.fg) out.fg = b.fg;
       if (b.accent) out.accent = b.accent;
+      if (b.iconFill) out.iconFill = b.iconFill;
       return out;
     });
   }

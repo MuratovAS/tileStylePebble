@@ -12,10 +12,10 @@
  * (0b11rrggbb, Widgets.toGColor8 on the settings page). A color byte of 0
  * means "not set" (inherit): a real GColor8 always has the top bits set.
  *
- * --- Settings blob (version 1) -----------------------------------------
+ * --- Settings blob (version 2) -----------------------------------------
  *
  *   off size
- *    0   1  version = 1
+ *    0   1  version = 2
  *    1   1  flags: bit0 clock24, bit1 metric, bit2 btVibe, bit3 lineOn
  *    2   4  grid.cols[4], px, sum 200
  *    6   4  grid.rows[4], px, sum 228
@@ -34,7 +34,8 @@
  *   22      N blocks:
  *             x, y, w, h   4 bytes, in grid cells
  *             widget id    1 byte (WidgetId)
- *             bg, fg, accent  3 bytes (0 = inherit from theme)
+ *             bg, fg, accent, iconFill  4 bytes (0 = inherit from theme;
+ *                          iconFill then falls back as theme.iconFill does)
  *             align        1 byte: 0 center, 1 left, 2 right
  *             opt length   1 byte L, then L bytes of widget options:
  *
@@ -60,7 +61,8 @@
  *   others      no options (L = 0)
  *
  * The watch must tolerate unknown widget ids (draw nothing) and longer
- * option payloads than it knows (skip by L).
+ * option payloads than it knows (skip by L). It also reads version 1 blobs,
+ * as stored by earlier releases: the same, but blocks have no iconFill byte.
  *
  * --- Weather blob (version 1) ------------------------------------------
  *
@@ -127,6 +129,7 @@ typedef enum {
   WEATHER_CONDITION_COUNT
 } WeatherCondition;
 
-#define PROTOCOL_VERSION 1
+#define CONFIG_VERSION 2   // settings blob
+#define WEATHER_VERSION 1  // weather blob
 #define CONFIG_MAX_BLOCKS 16
 #define WEATHER_MAX_HOURLY 48

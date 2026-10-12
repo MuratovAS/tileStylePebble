@@ -31,7 +31,7 @@ static void block_colors(const BlockConfig *b, GColor *bg, GColor *fg, GColor *a
   *bg = color8(c);
   *fg = color8(b->fg ? b->fg : s->fg);
   *accent = color8(b->accent ? b->accent : s->accent);
-  *icon_fill = color8(s->icon_fill ? s->icon_fill : c);
+  *icon_fill = color8(b->icon_fill ? b->icon_fill : (s->icon_fill ? s->icon_fill : c));
 }
 
 // --- clock cache ---------------------------------------------------------------

@@ -213,7 +213,7 @@ static uint32_t rd32(const uint8_t *p) {
 }
 
 static bool parse_weather(const uint8_t *b, int len, WeatherData *w) {
-  if (len < 19 || b[0] != PROTOCOL_VERSION) return false;
+  if (len < 19 || b[0] != WEATHER_VERSION) return false;
   int n = MIN(b[18], WEATHER_MAX_HOURLY);
   if (len < 19 + n * 3) return false;
   w->valid = true;

@@ -11,7 +11,7 @@ Settings g_settings;
 // Default: the "timestyle" preset of config/js/presets.js with the widget
 // option defaults of config/js/widgets.js
 static const uint8_t DEFAULT_BLOB[] = {
-  1,                       // version
+  CONFIG_VERSION,          // version
   0x07,                    // clock24, metric, btVibe
   53, 53, 52, 42,          // cols
   57, 57, 57, 57,          // rows
@@ -22,15 +22,15 @@ static const uint8_t DEFAULT_BLOB[] = {
   30,                      // weatherInterval
   5,                       // blocks
   // time: avenir, stack, zero
-  0, 0, 3, 4, WIDGET_TIME, 0, 0, 0, ALIGN_CENTER, 3, 0, 2, 0x01,
+  0, 0, 3, 4, WIDGET_TIME, 0, 0, 0, 0, ALIGN_CENTER, 3, 0, 2, 0x01,
   // weather
-  3, 0, 1, 1, WIDGET_WEATHER, 0xF4, 0xC0, 0xC0, ALIGN_CENTER, 0,
+  3, 0, 1, 1, WIDGET_WEATHER, 0xF4, 0xC0, 0xC0, 0, ALIGN_CENTER, 0,
   // date: calendar, upper, pattern "%a %e %b"
-  3, 1, 1, 1, WIDGET_DATE, 0xF4, 0xC0, 0xC0, ALIGN_CENTER, 11, 0, 1, 8, '%', 'a', ' ', '%', 'e', ' ', '%', 'b',
+  3, 1, 1, 1, WIDGET_DATE, 0xF4, 0xC0, 0xC0, 0, ALIGN_CENTER, 11, 0, 1, 8, '%', 'a', ' ', '%', 'e', ' ', '%', 'b',
   // steps: goal 0, short
-  3, 2, 1, 1, WIDGET_STEPS, 0xF4, 0xC0, 0xC0, ALIGN_CENTER, 3, 0, 0, 1,
+  3, 2, 1, 1, WIDGET_STEPS, 0xF4, 0xC0, 0xC0, 0, ALIGN_CENTER, 3, 0, 0, 1,
   // battery: icon_pct
-  3, 3, 1, 1, WIDGET_BATTERY, 0xF4, 0xC0, 0xC0, ALIGN_CENTER, 1, 1,
+  3, 3, 1, 1, WIDGET_BATTERY, 0xF4, 0xC0, 0xC0, 0, ALIGN_CENTER, 1, 1,
 };
 
 // Option defaults from widgets.js, in protocol byte order
@@ -73,7 +73,9 @@ static void parse_opts(BlockConfig *b, const uint8_t *p, int len) {
 }
 
 static bool parse(Settings *s, const uint8_t *d, int len) {
-  if (len < 22 || d[0] != PROTOCOL_VERSION) return false;
+  if (len < 22 || (d[0] != CONFIG_VERSION && d[0] != 1)) return false;
+  // version 1 (stored by earlier releases): blocks have no iconFill byte
+  int head = d[0] == 1 ? 10 : 11;
   memset(s, 0, sizeof(*s));
   s->clock24 = d[1] & 1;
   s->metric = (d[1] >> 1) & 1;
@@ -108,7 +110,7 @@ static bool parse(Settings *s, const uint8_t *d, int len) {
   uint16_t covered = 0;
   int off = 22;
   for (int i = 0; i < s->count; i++) {
-    if (off + 10 > len) return false;
+    if (off + head > len) return false;
     BlockConfig *b = &s->blocks[i];
     const uint8_t *p = d + off;
     b->x = p[0];
@@ -119,9 +121,11 @@ static bool parse(Settings *s, const uint8_t *d, int len) {
     b->bg = p[5];
     b->fg = p[6];
     b->accent = p[7];
+    b->icon_fill = head == 11 ? p[8] : 0;
+    p += head - 10;
     b->align = p[8] <= ALIGN_RIGHT ? p[8] : ALIGN_CENTER;
     int ol = p[9];
-    off += 10;
+    off += head;
     if (off + ol > len) return false;
     parse_opts(b, d + off, ol);
     off += ol;

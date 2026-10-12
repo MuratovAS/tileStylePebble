@@ -5,13 +5,14 @@
  * (tools/encode_config.js, tools/test_protocol.js).
  *
  * The input is the settings JSON produced by the settings page
- * (README.md, "Формат настроек (v1)"). Everything is normalized here:
+ * (README.md, "Settings format"). Everything is normalized here:
  * missing or invalid fields fall back to the page's defaults, so the
  * watch never has to validate values beyond the byte ranges in protocol.h.
  */
 'use strict';
 
-var VERSION = 1;
+var CONFIG_VERSION = 2;  // settings blob
+var WEATHER_VERSION = 1; // weather blob
 var MAX_BLOCKS = 16;
 var MAX_HOURLY = 48;
 var COLS = 4;
@@ -295,7 +296,7 @@ function alignOf(widget, o) {
 }
 
 /*
- * Settings JSON (object or string) -> settings blob v1 (array of bytes).
+ * Settings JSON (object or string) -> settings blob v2 (array of bytes).
  */
 function encodeConfig(cfg) {
   if (typeof cfg === 'string') cfg = JSON.parse(cfg);
@@ -306,7 +307,7 @@ function encodeConfig(cfg) {
   // as the page's loadInitial: no grid -> presets[0] grid, invalid -> even
   var grid = cfg.grid ? normalizeGrid(cfg.grid) : DEFAULT_GRID;
 
-  var out = [VERSION];
+  var out = [CONFIG_VERSION];
   out.push((bool(g.clock24, G.clock24) ? 1 : 0) |
     (bool(g.metric, G.metric) ? 2 : 0) |
     (bool(g.btVibe, G.btVibe) ? 4 : 0) |
@@ -336,7 +337,7 @@ function encodeConfig(cfg) {
     var opts = encodeOpts(widget, o);
     out.push(b.x, b.y, b.w, b.h, WIDGET_IDS[widget],
       color(b.bg, null, true), color(b.fg, null, true), color(b.accent, null, true),
-      alignOf(widget, o), opts.length);
+      color(b.iconFill, null, true), alignOf(widget, o), opts.length);
     out.push.apply(out, opts);
   });
   return out;
@@ -365,7 +366,7 @@ function unixTime(v) {
  */
 function encodeWeather(w) {
   if (!isObj(w)) w = {};
-  var out = [VERSION];
+  var out = [WEATHER_VERSION];
   u32(out, unixTime(w.fetchedAt));
   i16(out, tenths(w.temp));
   out.push(cond(w.condition));
@@ -388,7 +389,8 @@ function encodeWeather(w) {
 }
 
 module.exports = {
-  VERSION: VERSION,
+  CONFIG_VERSION: CONFIG_VERSION,
+  WEATHER_VERSION: WEATHER_VERSION,
   MAX_BLOCKS: MAX_BLOCKS,
   MAX_HOURLY: MAX_HOURLY,
   WIDGET_IDS: WIDGET_IDS,

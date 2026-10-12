@@ -19,7 +19,7 @@ typedef enum { LINE_SOLID = 0, LINE_DASHED = 1, LINE_DOTTED = 2 } LineStyle;
 typedef struct {
   uint8_t x, y, w, h;               // in grid cells
   uint8_t widget;                   // WidgetId
-  uint8_t bg, fg, accent;           // GColor8, 0 = inherit
+  uint8_t bg, fg, accent, icon_fill;  // GColor8, 0 = inherit
   uint8_t align;                    // Align
   // Widget options in protocol order, with the page's defaults filled in.
   // String options (date pattern, alt_tz label, text value) are in str;

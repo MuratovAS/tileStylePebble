@@ -506,15 +506,16 @@
 
   // --- whole screen ----------------------------------------------------
 
-  // iconFill: icon fill; if not set, the block background (the icon looks
-  // outlined, as in TimeStyle on a black panel)
+  // iconFill: icon fill, the block's own or the theme's; if neither is set,
+  // the block background (the icon looks outlined, as in TimeStyle on a
+  // black panel)
   function blockColors(b, theme) {
     var bg = b.bg || theme.tile || theme.bg;
     return {
       bg: bg,
       fg: b.fg || theme.fg,
       accent: b.accent || theme.accent,
-      iconFill: theme.iconFill || bg
+      iconFill: b.iconFill || theme.iconFill || bg
     };
   }
 

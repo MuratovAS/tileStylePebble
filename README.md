@@ -178,7 +178,7 @@ Don't edit these by hand; regenerate them:
 Icons are two-color, as in TimeStyle: a PNG with a palette of transparent,
 white (fill) and black (outline). The watch recolors them by swapping palette
 entries. The outline takes the block's accent color. The fill takes the
-theme's icon fill color, or the block background if that is not set.
+block's icon fill color, else the theme's, else the block background.
 
 ### Settings format
 
@@ -206,7 +206,8 @@ compact binary blob described in `src/c/protocol.h`.
 - `grid`: column widths and row heights in pixels. They always sum to 200 and
   228.
 - `layout`: blocks in grid cells, covering each of the 16 cells exactly once.
-  A block's `bg`/`fg`/`accent` are optional and default to the theme colors.
+  A block's `bg`/`fg`/`accent`/`iconFill` are optional and default to the
+  theme colors.
   `opts` always holds every widget option, defaults included.
 - `theme.tile: null` means blocks have no background of their own;
   `iconFill: null` fills icons with the block background. Half of `gap` is

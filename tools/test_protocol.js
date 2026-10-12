@@ -123,7 +123,7 @@ function decodeConfig(bytes) {
   for (var i = 0; i < n; i++) {
     var b = { x: r.u8(), y: r.u8(), w: r.u8(), h: r.u8(), id: r.u8() };
     b.widget = idToKey(b.id);
-    b.bg = r.u8(); b.fg = r.u8(); b.accent = r.u8();
+    b.bg = r.u8(); b.fg = r.u8(); b.accent = r.u8(); b.iconFill = r.u8();
     b.align = ALIGN[r.u8()];
     var len = r.u8();
     var opt = new Reader(r.bytes(len));
@@ -190,7 +190,7 @@ function expectedOpts(key, rawOpts) {
 function checkConfig(settings, label) {
   var c = decodeConfig(protocol.encodeConfig(settings));
   var t = settings.theme, g = settings.general;
-  assert.strictEqual(c.version, 1);
+  assert.strictEqual(c.version, 2);
   assert.deepStrictEqual(c.flags, { clock24: g.clock24, metric: g.metric, btVibe: g.btVibe, lineOn: !!t.lineOn }, label);
   assert.deepStrictEqual(c.grid, settings.grid, label);
   assert.deepStrictEqual(c.theme, {
@@ -204,7 +204,7 @@ function checkConfig(settings, label) {
     var d = c.blocks[i], l = label + ' block ' + i + ' (' + b.widget + ')';
     assert.deepStrictEqual([d.x, d.y, d.w, d.h], [b.x, b.y, b.w, b.h], l);
     assert.strictEqual(d.id, Widgets.get(b.widget).id, l);
-    assert.deepStrictEqual([d.bg, d.fg, d.accent], [col(b.bg), col(b.fg), col(b.accent)], l);
+    assert.deepStrictEqual([d.bg, d.fg, d.accent, d.iconFill], [col(b.bg), col(b.fg), col(b.accent), col(b.iconFill)], l);
     var o = Widgets.resolveOpts(b.widget, b.opts);
     assert.strictEqual(d.align, o.align || 'center', l);
     assert.deepStrictEqual(d.opts, expectedOpts(b.widget, b.opts), l);
@@ -295,6 +295,7 @@ function syntheticSettings() {
       if (i % 3 === 0) b.bg = Widgets.PALETTE[(i * 7) % 64];
       if (i % 3 === 1) b.fg = Widgets.PALETTE[(i * 11) % 64];
       if (i % 2 === 0) b.accent = Widgets.PALETTE[(i * 5 + 3) % 64];
+      if (i % 4 === 1) b.iconFill = Widgets.PALETTE[(i * 13 + 1) % 64];
       return b;
     }),
     theme: { bg: '#550055', tile: '#AAAAAA', fg: '#FFFF00', accent: '#00FFAA', iconFill: null, gap: 6, radius: 12,

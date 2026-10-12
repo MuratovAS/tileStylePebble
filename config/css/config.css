@@ -406,7 +406,7 @@ h3 { font-size: 13px; margin: 18px 0 8px; font-weight: 600; color: var(--muted);
 
 /* --- colors --- */
 
-.colors { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.colors { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
 .colors small { display: block; color: var(--muted); font-size: 12px; margin-bottom: 4px; }
 
 .swatch {
