@@ -1,0 +1,19 @@
+# Pebble SDK build
+build/
+.lock-waf*
+*.pbw
+node_modules/
+
+# Python
+__pycache__/
+
+# temporary file from tools/icons.py
+tools/_icon_sources.js
+
+# editors and OS
+.vscode/
+.idea/
+.DS_Store
+
+# settings page: gh-pages worktree (git worktree add config gh-pages)
+/config/

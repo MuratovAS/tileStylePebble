@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<!--
+  Rasterizes icon sources at every Widgets.ICON_SIZES size without
+  anti-aliasing. Run from tools/icons.py via headless Chromium;
+  icons.py first writes _icon_sources.js with the sources.
+
+  Pixel: 0 = empty, 1 = fill, 2 = stroke. As in TimeStyle, role colors
+  are chosen when drawing on the watch.
+  The result is JSON in <pre id="out">.
+-->
+<meta charset="utf-8">
+<pre id="out"></pre>
+<script src="../config/js/widgets.js"></script>
+<script src="_icon_sources.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  // Role colors on the canvas; after drawing, a pixel belongs to the role
+  // whose channel is stronger
+  var FILL = '#00ff00';
+  var STROKE = '#ff0000';
+
+  function roundRectPath(p, x, y, w, h, r) {
+    r = Math.max(0, Math.min(r, w / 2, h / 2));
+    p.moveTo(x + r, y);
+    p.arcTo(x + w, y, x + w, y + h, r);
+    p.arcTo(x + w, y + h, x, y + h, r);
+    p.arcTo(x, y + h, x, y, r);
+    p.arcTo(x, y, x + w, y, r);
+    p.closePath();
+    return p;
+  }
+
+  // A .pdc image. As after gdraw_command_image_recolor in TimeStyle:
+  // every command is filled, and stroked if it has a stroke width.
+  // In Pebble an integer coordinate is a pixel center, while on the canvas
+  // the pixel center is x + 0.5, so everything shifts by half a pixel. This way
+  // a 2-wide line at coordinate 5.5 lands exactly on pixels 5 and 6.
+  function drawPdc(ctx, img, size) {
+    var k = size / img.w;
+    ctx.save();
+    ctx.scale(k, k);
+    ctx.translate(0.5, 0.5);
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    img.commands.forEach(function (c) {
+      if (c.hidden) return;
+      var p = new Path2D();
+      if (c.type === 2) {
+        p.arc(c.points[0][0], c.points[0][1], c.radius, 0, Math.PI * 2);
+      } else {
+        c.points.forEach(function (pt, i) {
+          if (i) p.lineTo(pt[0], pt[1]); else p.moveTo(pt[0], pt[1]);
+        });
+        if (!c.open) p.closePath();
+      }
+      ctx.fillStyle = img.swap ? STROKE : FILL;
+      ctx.fill(p);
+      if (c.stroke_width > 0) {
+        ctx.strokeStyle = img.swap ? FILL : STROKE;
+        // at small sizes, keep lines at least one pixel wide
+        ctx.lineWidth = Math.max(c.stroke_width, 1 / k);
+        ctx.stroke(p);
+      }
+    });
+    ctx.restore();
+  }
+
+  // Vector source from Widgets.ICONS (24×24): everything drawn is stroke
+  function drawSvg(ctx, markup, size) {
+    var doc = new DOMParser().parseFromString('<svg xmlns="http://www.w3.org/2000/svg">' + markup + '</svg>', 'image/svg+xml');
+    ctx.save();
+    ctx.scale(size / 24, size / 24);
+    Array.prototype.forEach.call(doc.documentElement.children, function (el) {
+      var a = {};
+      Array.prototype.forEach.call(el.attributes, function (at) { a[at.name] = at.value; });
+      var cut = a.stroke && a.stroke.indexOf('var(') === 0;
+      if (el.tagName === 'text') {
+        ctx.fillStyle = STROKE;
+        ctx.font = (a['font-weight'] || 400) + ' ' + a['font-size'] + 'px sans-serif';
+        ctx.textAlign = a['text-anchor'] === 'middle' ? 'center' : 'left';
+        ctx.fillText(el.textContent, +a.x, +a.y);
+        return;
+      }
+      var p;
+      if (el.tagName === 'path') p = new Path2D(a.d);
+      else if (el.tagName === 'circle') { p = new Path2D(); p.arc(+a.cx, +a.cy, +a.r, 0, Math.PI * 2); }
+      else if (el.tagName === 'rect') p = roundRectPath(new Path2D(), +a.x, +a.y, +a.width, +a.height, +(a.rx || 0));
+      else return;
+      if (a.fill !== 'none') { ctx.fillStyle = STROKE; ctx.fill(p); }
+      if (a.stroke && a.stroke !== 'none') {
+        ctx.globalCompositeOperation = cut ? 'destination-out' : 'source-over';
+        ctx.strokeStyle = STROKE;
+        ctx.lineWidth = +(a['stroke-width'] || 1);
+        ctx.lineCap = a['stroke-linecap'] || 'butt';
+        ctx.lineJoin = a['stroke-linejoin'] || 'miter';
+        ctx.setLineDash(a['stroke-dasharray'] ? a['stroke-dasharray'].split(/[\s,]+/).map(Number) : []);
+        ctx.stroke(p);
+        ctx.globalCompositeOperation = 'source-over';
+      }
+    });
+    ctx.restore();
+  }
+
+  var src = window.IconSources;
+  var out = {};
+  Object.keys(src).forEach(function (name) {
+    out[name] = {};
+    Widgets.ICON_SIZES.forEach(function (size) {
+      var cv = document.createElement('canvas');
+      cv.width = cv.height = size;
+      var ctx = cv.getContext('2d');
+      if (src[name].pdc) drawPdc(ctx, src[name].pdc, size);
+      else drawSvg(ctx, Widgets.ICONS[src[name].svg], size);
+      var d = ctx.getImageData(0, 0, size, size).data;
+      var px = '';
+      for (var i = 0; i < d.length; i += 4) {
+        px += d[i + 3] < 128 ? '0' : (d[i] > d[i + 1] ? '2' : '1');
+      }
+      out[name][size] = px;
+    });
+  });
+  document.getElementById('out').textContent = JSON.stringify(out);
+})();
+</script>
