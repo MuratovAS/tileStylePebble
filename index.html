@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>TileStyle — настройки</title>
+  <link rel="stylesheet" href="css/config.css">
+</head>
+<body>
+
+<header class="topbar">
+  <button type="button" class="btn btn-ghost" id="cancelBtn">Отмена</button>
+  <h1>TileStyle</h1>
+  <button type="button" class="btn btn-primary" id="saveBtn">Сохранить</button>
+</header>
+
+<main class="layout">
+
+  <section class="stage">
+    <div class="watch">
+      <div class="screen-area">
+        <div class="screen-wrap" id="screenWrap">
+          <canvas class="screen" id="screen" width="200" height="228"></canvas>
+          <div class="overlay" id="overlay" aria-label="Сетка 4×4"></div>
+        </div>
+        <div class="handles" id="handles"></div>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <button type="button" class="btn" id="undoBtn" title="Отменить">↶ Отменить</button>
+      <button type="button" class="btn btn-accent" id="mergeBtn">Объединить</button>
+      <button type="button" class="btn" id="splitBtn">Разделить</button>
+      <button type="button" class="btn" id="gridEqualBtn" title="Сделать все столбцы и строки одинаковыми">Поровну</button>
+      <label class="chip-toggle"><input type="checkbox" id="gridToggle" checked> Сетка</label>
+    </div>
+    <p class="hint">Нажмите на блок, чтобы выбрать виджет. Проведите по нескольким ячейкам, чтобы выделить и объединить их.
+      Ручки на рамке меняют ширину столбцов и высоту строк.</p>
+    <ul class="warnings" id="warnings"></ul>
+  </section>
+
+  <div class="panels">
+
+    <section class="panel">
+      <h2>Готовые раскладки</h2>
+      <div class="presets" id="presets"></div>
+
+      <div class="mine-head">
+        <h3>Мои раскладки</h3>
+        <button type="button" class="btn" id="savePresetBtn">Сохранить текущую</button>
+      </div>
+      <form class="save-form" id="savePresetForm" hidden>
+        <input type="text" id="presetName" maxlength="30" placeholder="Название" autocomplete="off">
+        <button type="submit" class="btn btn-accent">Сохранить</button>
+        <button type="button" class="btn btn-ghost" id="savePresetCancel">Отмена</button>
+      </form>
+      <p class="muted small-note" id="userPresetsNote"></p>
+      <div class="presets" id="userPresets"></div>
+    </section>
+
+    <section class="panel" id="inspector"></section>
+
+    <section class="panel">
+      <h2>Тема</h2>
+      <div class="field">
+        <span>Фон экрана</span>
+        <button type="button" class="swatch" data-color="theme.bg"></button>
+      </div>
+      <div class="field">
+        <span>Фон блоков</span>
+        <button type="button" class="swatch" data-color="theme.tile" data-inherit="Как фон экрана"></button>
+      </div>
+      <div class="field">
+        <span>Текст</span>
+        <button type="button" class="swatch" data-color="theme.fg"></button>
+      </div>
+      <div class="field">
+        <span>Акцент (обводка иконок)</span>
+        <button type="button" class="swatch" data-color="theme.accent"></button>
+      </div>
+      <div class="field">
+        <span>Заливка иконок</span>
+        <button type="button" class="swatch" data-color="theme.iconFill" data-inherit="Как фон блока"></button>
+      </div>
+      <div class="field">
+        <span>Отступ между блоками</span>
+        <div class="seg" data-bind="theme.gap">
+          <button type="button" data-v="0">0</button>
+          <button type="button" data-v="2">2</button>
+          <button type="button" data-v="4">4</button>
+          <button type="button" data-v="6">6</button>
+        </div>
+      </div>
+      <div class="field">
+        <span>Скругление углов</span>
+        <div class="seg" data-bind="theme.radius">
+          <button type="button" data-v="0">0</button>
+          <button type="button" data-v="4">4</button>
+          <button type="button" data-v="8">8</button>
+          <button type="button" data-v="12">12</button>
+        </div>
+      </div>
+      <div class="field">
+        <span>Линии между блоками</span>
+        <label class="switch"><input type="checkbox" data-bind="theme.lineOn"><i></i></label>
+      </div>
+      <div id="lineOpts">
+        <div class="field">
+          <span>Цвет линий</span>
+          <button type="button" class="swatch" data-color="theme.lineColor"></button>
+        </div>
+        <div class="field">
+          <span>Толщина</span>
+          <div class="seg" data-bind="theme.lineWidth">
+            <button type="button" data-v="1">1</button>
+            <button type="button" data-v="2">2</button>
+            <button type="button" data-v="3">3</button>
+          </div>
+        </div>
+        <div class="field">
+          <span>Тип линии</span>
+          <div class="seg" data-bind="theme.lineStyle">
+            <button type="button" data-v="solid">Сплошная</button>
+            <button type="button" data-v="dashed">Пунктир</button>
+            <button type="button" data-v="dotted">Точки</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Общие</h2>
+      <div class="field">
+        <span>Формат времени</span>
+        <div class="seg" data-bind="general.clock24">
+          <button type="button" data-v="true">24 ч</button>
+          <button type="button" data-v="false">12 ч</button>
+        </div>
+      </div>
+      <div class="field">
+        <span>Единицы</span>
+        <div class="seg" data-bind="general.metric">
+          <button type="button" data-v="true">°C, км</button>
+          <button type="button" data-v="false">°F, ми</button>
+        </div>
+      </div>
+      <div class="field">
+        <span>Вибрация при потере Bluetooth</span>
+        <label class="switch"><input type="checkbox" data-bind="general.btVibe"><i></i></label>
+      </div>
+
+      <h3>Погода</h3>
+      <div class="field">
+        <span>Местоположение</span>
+        <div class="seg" data-bind="general.weatherSource">
+          <button type="button" data-v="gps">GPS</button>
+          <button type="button" data-v="manual">Вручную</button>
+          <button type="button" data-v="off">Выкл.</button>
+        </div>
+      </div>
+      <div class="field field-col" id="weatherLocField">
+        <span>Город</span>
+        <div class="suggest-wrap">
+          <input type="text" id="weatherLoc" placeholder="Начните вводить название…" maxlength="200"
+                 autocomplete="off" role="combobox" aria-autocomplete="list" aria-controls="weatherSuggest" aria-expanded="false">
+          <div class="suggest" id="weatherSuggest" role="listbox" hidden></div>
+        </div>
+        <small class="muted" id="weatherCoords"></small>
+      </div>
+      <div class="field">
+        <span>Обновлять</span>
+        <select data-bind="general.weatherInterval">
+          <option value="30">Раз в 30 мин</option>
+          <option value="60">Раз в час</option>
+          <option value="120">Раз в 2 часа</option>
+        </select>
+      </div>
+    </section>
+
+    <details class="panel dev">
+      <summary>Для разработчика: JSON настроек</summary>
+      <pre id="jsonOut"></pre>
+    </details>
+
+  </div>
+</main>
+
+<div class="sheet" id="widgetSheet" hidden>
+  <div class="sheet-backdrop" data-close></div>
+  <div class="sheet-body sheet-tall" role="dialog" aria-label="Выбор виджета">
+    <div class="sheet-head">
+      <strong id="widgetSheetTitle">Виджет</strong>
+      <button type="button" class="btn btn-ghost" data-close>Закрыть</button>
+    </div>
+    <div id="widgetPicker"></div>
+  </div>
+</div>
+
+<div class="sheet" id="colorSheet" hidden>
+  <div class="sheet-backdrop" data-close></div>
+  <div class="sheet-body" role="dialog" aria-label="Выбор цвета">
+    <div class="sheet-head">
+      <strong id="colorSheetTitle">Цвет</strong>
+      <button type="button" class="btn btn-ghost" data-close>Готово</button>
+    </div>
+    <button type="button" class="btn inherit-btn" id="colorInherit">Как в теме</button>
+    <div class="palette" id="palette"></div>
+  </div>
+</div>
+
+<script src="js/layout.js"></script>
+<script src="js/fonts.js"></script>
+<script src="js/sysfonts.js"></script>
+<script src="js/icons.js"></script>
+<script src="js/widgets.js"></script>
+<script src="js/raster.js"></script>
+<script src="js/presets.js"></script>
+<script src="js/config.js"></script>
+</body>
+</html>
