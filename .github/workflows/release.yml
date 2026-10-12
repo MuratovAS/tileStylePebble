@@ -54,5 +54,5 @@ jobs:
           flags=()
           if [[ "$VERSION" == *-* ]]; then flags+=(--prerelease); fi # e.g. 1.1.0-beta.1
           gh release create "$GITHUB_REF_NAME" "tilestyle-$VERSION.pbw" \
-            --repo "$GITHUB_REPOSITORY" --title "TileStyle $VERSION" \
+            --repo "$GITHUB_REPOSITORY" --title "$GITHUB_REF_NAME" \
             --generate-notes --verify-tag "${flags[@]}"
