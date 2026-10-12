@@ -1,6 +1,7 @@
 /*
  * Built-in layouts. theme is optional: without it the user's theme
  * stays as is. So is grid (proportions in px): without it the grid is even.
+ * Names are in English and translated by i18n.js.
  */
 (function (root) {
   'use strict';
@@ -36,7 +37,7 @@
     },
     {
       key: 'center',
-      name: 'По центру',
+      name: 'Centered',
       grid: { cols: [50, 50, 50, 50], rows: [44, 70, 70, 44] },
       theme: { bg: '#000000', tile: null, fg: '#FFFFFF', accent: '#55AAFF', iconFill: null, gap: 0, radius: 0 },
       layout: [
@@ -50,7 +51,7 @@
     },
     {
       key: 'dashboard',
-      name: 'Дашборд',
+      name: 'Dashboard',
       theme: { bg: '#000000', tile: '#000055', fg: '#FFFFFF', accent: '#55FFFF', iconFill: null, gap: 4, radius: 8 },
       layout: [
         { x: 0, y: 0, w: 3, h: 1, widget: 'time', opts: { stack: 'line', font: 'leco' } },
@@ -67,7 +68,7 @@
     },
     {
       key: 'minimal',
-      name: 'Минимализм',
+      name: 'Minimal',
       grid: { cols: [50, 50, 50, 50], rows: [50, 64, 64, 50] },
       theme: { bg: '#FFFFFF', tile: null, fg: '#000000', accent: '#AA0000', iconFill: null, gap: 0, radius: 0 },
       layout: [
@@ -79,7 +80,7 @@
     {
       // glowing LECO digits, dashed rule, a row of stats
       key: 'neon',
-      name: 'Неон',
+      name: 'Neon',
       grid: { cols: [50, 50, 50, 50], rows: [36, 90, 20, 82] },
       theme: { bg: '#000000', tile: null, fg: '#55FFFF', accent: '#FF55FF', iconFill: null, gap: 0, radius: 0 },
       layout: [
@@ -95,7 +96,7 @@
     {
       // warm paper, thin rule, labels along the edges
       key: 'paper',
-      name: 'Бумага',
+      name: 'Paper',
       grid: { cols: [50, 50, 50, 50], rows: [60, 60, 20, 88] },
       theme: { bg: '#FFFFAA', tile: null, fg: '#000000', accent: '#AA5500', iconFill: '#FFFFAA', gap: 0, radius: 0 },
       layout: [
@@ -108,7 +109,7 @@
     {
       // rounded cards on black, like phone widgets
       key: 'cards',
-      name: 'Карточки',
+      name: 'Cards',
       grid: { cols: [50, 50, 50, 50], rows: [57, 57, 57, 57] },
       theme: { bg: '#000000', tile: '#555555', fg: '#FFFFFF', accent: '#FFAA00', iconFill: null, gap: 6, radius: 12 },
       layout: [
@@ -123,7 +124,7 @@
     {
       // green terminal: LECO, temperature chart, ISO date and .beat
       key: 'terminal',
-      name: 'Терминал',
+      name: 'Terminal',
       grid: { cols: [50, 50, 50, 50], rows: [60, 60, 60, 48] },
       theme: { bg: '#000000', tile: null, fg: '#00FF00', accent: '#00AA00', iconFill: null, gap: 0, radius: 0,
         lineOn: true, lineWidth: 1, lineColor: '#00AA00', lineStyle: 'dotted' },
@@ -138,7 +139,7 @@
     {
       // sunset stripes from top to bottom
       key: 'sunset',
-      name: 'Закат',
+      name: 'Sunset',
       grid: { cols: [50, 50, 50, 50], rows: [40, 64, 64, 60] },
       theme: { bg: '#550055', tile: null, fg: '#FFFFFF', accent: '#FFAA00', iconFill: null, gap: 0, radius: 0 },
       layout: [
@@ -150,7 +151,7 @@
     {
       // activity: large steps with goal, heart rate, calories, chart
       key: 'sport',
-      name: 'Спорт',
+      name: 'Sport',
       grid: { cols: [50, 50, 50, 50], rows: [50, 64, 64, 50] },
       theme: { bg: '#000000', tile: '#005500', fg: '#FFFFFF', accent: '#AAFF00', iconFill: null, gap: 4, radius: 8 },
       layout: [
@@ -166,7 +167,7 @@
     {
       // black and white halves
       key: 'contrast',
-      name: 'Контраст',
+      name: 'Contrast',
       grid: { cols: [60, 60, 40, 40], rows: [57, 57, 57, 57] },
       theme: { bg: '#000000', tile: null, fg: '#FFFFFF', accent: '#FFFFFF', iconFill: '#FFFFFF', gap: 0, radius: 0 },
       layout: [
@@ -180,7 +181,7 @@
     {
       // world time: four cities below the main clock
       key: 'world',
-      name: 'Мир',
+      name: 'World',
       grid: { cols: [50, 50, 50, 50], rows: [44, 76, 64, 44] },
       theme: { bg: '#000055', tile: null, fg: '#FFFFFF', accent: '#FFAA00', iconFill: null, gap: 0, radius: 0,
         lineOn: true, lineWidth: 1, lineColor: '#5555AA', lineStyle: 'solid' },

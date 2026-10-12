@@ -8,6 +8,9 @@
  * other text with the firmware bitmap fonts, icons with prebuilt
  * fixed-size bitmaps. On-watch labels are in English: the firmware
  * fonts have no Cyrillic.
+ *
+ * Names, option labels and choices are the page UI: they are written in
+ * English and translated by i18n.js.
  */
 (function (root) {
   'use strict';
@@ -228,7 +231,7 @@
 
   // Preset date formats: option value -> pattern
   var DATE_FORMATS = [
-    ['calendar', null, 'Листок календаря'],
+    ['calendar', null, 'Calendar page'],
     ['e_b', '%e %b', '12 OCT'],
     ['b_e', '%b %e', 'OCT 12'],
     ['a_e_b', '%a %e %b', 'MON 12 OCT'],
@@ -242,11 +245,11 @@
     ['m_d', '%m/%d', '10/12'],
     ['m_d_Y', '%m/%d/%Y', '10/12/2026'],
     ['iso', '%Y-%m-%d', '2026-10-12'],
-    ['2_a_eb', '%a|%e %b', 'Две строки: MON / 12 OCT'],
-    ['2_e_b', '%e|%b', 'Две строки: 12 / OCT'],
-    ['2_A_eB', '%A|%e %B', 'Две строки: MONDAY / 12 OCTOBER'],
-    ['3_a_e_b', '%a|%e|%b', 'Три строки: MON / 12 / OCT'],
-    ['custom', null, 'Свой формат…']
+    ['2_a_eb', '%a|%e %b', 'Two lines: MON / 12 OCT'],
+    ['2_e_b', '%e|%b', 'Two lines: 12 / OCT'],
+    ['2_A_eB', '%A|%e %B', 'Two lines: MONDAY / 12 OCTOBER'],
+    ['3_a_e_b', '%a|%e|%b', 'Three lines: MON / 12 / OCT'],
+    ['custom', null, 'Custom…']
   ];
   // legacy option values from early versions
   var DATE_LEGACY = { day_month: '%e %b', numeric: '%d.%m', full: '%a %e %b' };
@@ -272,18 +275,18 @@
 
   var LIST = [
     {
-      key: 'empty', id: 0, name: 'Пусто', group: 'base',
+      key: 'empty', id: 0, name: 'Empty', group: 'base',
       render: function () {}
     },
     {
-      key: 'time', id: 1, name: 'Время', group: 'base', min: [36, 30],
+      key: 'time', id: 1, name: 'Time', group: 'base', min: [36, 30],
       opts: [
-        { key: 'font', type: 'select', label: 'Шрифт', def: 'avenir',
+        { key: 'font', type: 'select', label: 'Font', def: 'avenir',
           choices: [['avenir', 'Avenir'], ['bold', 'Avenir Bold'], ['leco', 'LECO']] },
-        { key: 'stack', type: 'select', label: 'Компоновка', def: 'auto',
-          choices: [['auto', 'Авто'], ['line', 'В строку'], ['stack', 'Часы над минутами']] },
-        { key: 'zero', type: 'toggle', label: 'Ведущий ноль', def: true },
-        { key: 'aa', type: 'toggle', label: 'Сглаживание', def: false }
+        { key: 'stack', type: 'select', label: 'Arrangement', def: 'auto',
+          choices: [['auto', 'Auto'], ['line', 'One line'], ['stack', 'Hours above minutes']] },
+        { key: 'zero', type: 'toggle', label: 'Leading zero', def: true },
+        { key: 'aa', type: 'toggle', label: 'Antialiasing', def: false }
       ],
       // Digits are drawn with TimeStyle font outlines via fctx; the font size
       // is an integer, as in TimeStyle. The clock as a whole is always centered in the block.
@@ -332,15 +335,15 @@
       }
     },
     {
-      key: 'date', id: 2, name: 'Дата', group: 'base',
+      key: 'date', id: 2, name: 'Date', group: 'base',
       opts: [
-        { key: 'format', type: 'select', label: 'Формат', def: 'calendar',
+        { key: 'format', type: 'select', label: 'Format', def: 'calendar',
           choices: DATE_FORMATS.map(function (f) { return [f[0], f[2]]; }) },
-        { key: 'pattern', type: 'text', label: 'Шаблон', def: '%a %e %b', max: 40,
+        { key: 'pattern', type: 'text', label: 'Pattern', def: '%a %e %b', max: 40,
           showIf: function (o) { return o.format === 'custom'; },
           hint: '%d — 05, %e — 5, %m — 10, %b — OCT, %B — OCTOBER, %a — MON, %A — MONDAY, ' +
-            '%y — 26, %Y — 2026, %j — день года, %V — неделя, | — новая строка' },
-        { key: 'upper', type: 'toggle', label: 'Все заглавные', def: true,
+            '%y — 26, %Y — 2026, %j — day of year, %V — week, | — new line' },
+        { key: 'upper', type: 'toggle', label: 'All caps', def: true,
           showIf: function (o) { return o.format !== 'calendar'; } }
       ],
       render: function (box) {
@@ -379,9 +382,9 @@
       }
     },
     {
-      key: 'weekday', id: 3, name: 'День недели', group: 'base',
+      key: 'weekday', id: 3, name: 'Weekday', group: 'base',
       opts: [
-        { key: 'long', type: 'toggle', label: 'Полное название (если влезет)', def: true }
+        { key: 'long', type: 'toggle', label: 'Full name (if it fits)', def: true }
       ],
       render: function (box) {
         var d = box.now;
@@ -394,10 +397,10 @@
       }
     },
     {
-      key: 'battery', id: 4, name: 'Батарея', group: 'status',
+      key: 'battery', id: 4, name: 'Battery', group: 'status',
       opts: [
-        { key: 'style', type: 'select', label: 'Вид', def: 'icon_pct',
-          choices: [['icon', 'Иконка'], ['icon_pct', 'Иконка + %'], ['pct', 'Только %']] }
+        { key: 'style', type: 'select', label: 'Style', def: 'icon_pct',
+          choices: [['icon', 'Icon'], ['icon_pct', 'Icon + %'], ['pct', '% only']] }
       ],
       render: function (box) {
         var g = box.g, lvl = box.mock.battery, st = box.opts.style;
@@ -414,7 +417,7 @@
     {
       key: 'bluetooth', id: 5, name: 'Bluetooth', group: 'status',
       opts: [
-        { key: 'only_lost', type: 'toggle', label: 'Показывать только при потере связи', def: true }
+        { key: 'only_lost', type: 'toggle', label: 'Show only when disconnected', def: true }
       ],
       render: function (box) {
         // in the preview, "only when lost" shows the disconnected icon
@@ -425,10 +428,10 @@
       }
     },
     {
-      key: 'steps', id: 6, name: 'Шаги', group: 'health',
+      key: 'steps', id: 6, name: 'Steps', group: 'health',
       opts: [
-        { key: 'goal', type: 'number', label: 'Цель (0 — без полоски)', def: 10000, min: 0, max: 50000, step: 500 },
-        { key: 'short', type: 'toggle', label: 'Сокращать до тысяч (6.3k)', def: true }
+        { key: 'goal', type: 'number', label: 'Goal (0 — no bar)', def: 10000, min: 0, max: 50000, step: 500 },
+        { key: 'short', type: 'toggle', label: 'Abbreviate thousands (6.3k)', def: true }
       ],
       render: function (box) {
         var v = box.mock.steps;
@@ -451,9 +454,9 @@
       }
     },
     {
-      key: 'steps_graph', id: 7, name: 'Шаги по часам', group: 'health', min: [80, 30],
+      key: 'steps_graph', id: 7, name: 'Steps by hour', group: 'health', min: [80, 30],
       opts: [
-        { key: 'from', type: 'number', label: 'Начиная с часа', def: 6, min: 0, max: 23, step: 1 }
+        { key: 'from', type: 'number', label: 'Starting hour', def: 6, min: 0, max: 23, step: 1 }
       ],
       render: function (box) {
         var from = clamp(Number(box.opts.from) || 0, 0, 23);
@@ -469,11 +472,11 @@
       }
     },
     {
-      key: 'distance', id: 8, name: 'Дистанция', group: 'health',
+      key: 'distance', id: 8, name: 'Distance', group: 'health',
       opts: [
-        { key: 'unit', type: 'select', label: 'Единицы', def: 'auto',
-          choices: [['auto', 'Как в общих настройках (км / мили)'], ['km', 'Километры'], ['m', 'Метры'],
-            ['mi', 'Мили'], ['ft', 'Футы']] }
+        { key: 'unit', type: 'select', label: 'Units', def: 'auto',
+          choices: [['auto', 'As in general settings (km / miles)'], ['km', 'Kilometers'], ['m', 'Meters'],
+            ['mi', 'Miles'], ['ft', 'Feet']] }
       ],
       render: function (box) {
         var m = box.mock.distanceM, L = box.L;
@@ -488,21 +491,21 @@
       }
     },
     {
-      key: 'calories', id: 9, name: 'Калории', group: 'health',
+      key: 'calories', id: 9, name: 'Calories', group: 'health',
       render: function (box) {
         metric(box, simpleIcon(box, 'calories'), String(box.mock.kcal), box.L.kcal);
       }
     },
     {
-      key: 'heart', id: 10, name: 'Пульс', group: 'health',
+      key: 'heart', id: 10, name: 'Heart rate', group: 'health',
       render: function (box) {
         metric(box, simpleIcon(box, 'heart'), String(box.mock.heart), box.L.bpm);
       }
     },
     {
-      key: 'sleep', id: 11, name: 'Сон', group: 'health',
+      key: 'sleep', id: 11, name: 'Sleep', group: 'health',
       opts: [
-        { key: 'deep', type: 'toggle', label: 'Только глубокий сон', def: false }
+        { key: 'deep', type: 'toggle', label: 'Deep sleep only', def: false }
       ],
       render: function (box) {
         var mins = box.opts.deep ? Math.round(box.mock.sleepMin * 0.35) : box.mock.sleepMin;
@@ -512,14 +515,14 @@
       }
     },
     {
-      key: 'weather', id: 12, name: 'Погода сейчас', group: 'weather',
+      key: 'weather', id: 12, name: 'Current weather', group: 'weather',
       render: function (box) {
         var t = (box.metric ? box.mock.temp : Math.round(box.mock.temp * 1.8 + 32)) + '°';
         metric(box, simpleIcon(box, 'weather_' + box.mock.condition), t);
       }
     },
     {
-      key: 'forecast', id: 13, name: 'Прогноз мин/макс', group: 'weather',
+      key: 'forecast', id: 13, name: 'Forecast low/high', group: 'weather',
       render: function (box) {
         var g = box.g;
         var cv = function (t) { return (box.metric ? t : Math.round(t * 1.8 + 32)) + '°'; };
@@ -537,23 +540,23 @@
       }
     },
     {
-      key: 'uv', id: 14, name: 'УФ-индекс', group: 'weather',
+      key: 'uv', id: 14, name: 'UV index', group: 'weather',
       render: function (box) {
         metric(box, simpleIcon(box, 'uv'), String(box.mock.uv), 'UV');
       }
     },
     {
-      key: 'seconds', id: 15, name: 'Секунды', group: 'time',
-      note: 'Часы будут просыпаться каждую секунду — заметно сажает батарею.',
+      key: 'seconds', id: 15, name: 'Seconds', group: 'time',
+      note: 'The watch will wake up every second, which noticeably drains the battery.',
       render: function (box) {
         centerText(box, ':' + pad2(box.now.getSeconds()));
       }
     },
     {
-      key: 'alt_tz', id: 16, name: 'Второй часовой пояс', group: 'time',
+      key: 'alt_tz', id: 16, name: 'Second time zone', group: 'time',
       opts: [
-        { key: 'label', type: 'text', label: 'Подпись', def: 'UTC', max: 5 },
-        { key: 'offset', type: 'number', label: 'Смещение от UTC, ч', def: 0, min: -12, max: 14, step: 0.5 }
+        { key: 'label', type: 'text', label: 'Label', def: 'UTC', max: 5 },
+        { key: 'offset', type: 'number', label: 'UTC offset, h', def: 0, min: -12, max: 14, step: 0.5 }
       ],
       render: function (box) {
         var g = box.g;
@@ -570,7 +573,7 @@
       }
     },
     {
-      key: 'week', id: 17, name: 'Номер недели', group: 'time',
+      key: 'week', id: 17, name: 'Week number', group: 'time',
       render: function (box) {
         var g = box.g;
         var n = String(isoWeek(box.now));
@@ -589,9 +592,9 @@
       }
     },
     {
-      key: 'text', id: 19, name: 'Свой текст', group: 'other',
+      key: 'text', id: 19, name: 'Custom text', group: 'other',
       opts: [
-        { key: 'value', type: 'text', label: 'Текст', def: 'Hello', max: 20 }
+        { key: 'value', type: 'text', label: 'Text', def: 'Hello', max: 20 }
       ],
       render: function (box) {
         var v = String(box.opts.value || '');
@@ -599,13 +602,13 @@
       }
     },
     {
-      key: 'hourly', id: 20, name: 'Почасовой прогноз', group: 'weather', min: [56, 30],
+      key: 'hourly', id: 20, name: 'Hourly forecast', group: 'weather', min: [56, 30],
       opts: [
-        { key: 'style', type: 'select', label: 'Вид', def: 'columns',
-          choices: [['columns', 'Колонки: час, иконка, температура'], ['graph', 'График температуры']] },
-        { key: 'step', type: 'select', label: 'Шаг', def: '1',
-          choices: [['1', '1 час'], ['2', '2 часа'], ['3', '3 часа']] },
-        { key: 'count', type: 'number', label: 'Сколько часов (0 — сколько влезет)', def: 0, min: 0, max: 12, step: 1 }
+        { key: 'style', type: 'select', label: 'Style', def: 'columns',
+          choices: [['columns', 'Columns: hour, icon, temperature'], ['graph', 'Temperature graph']] },
+        { key: 'step', type: 'select', label: 'Step', def: '1',
+          choices: [['1', '1 hour'], ['2', '2 hours'], ['3', '3 hours']] },
+        { key: 'count', type: 'number', label: 'Hours to show (0 — as many as fit)', def: 0, min: 0, max: 12, step: 1 }
       ],
       render: function (box) {
         var g = box.g, o = box.opts, fg = box.c.fg, acc = box.c.accent;
@@ -669,15 +672,15 @@
       }
     },
     {
-      key: 'divider', id: 21, name: 'Разделитель', group: 'other', min: [4, 4],
+      key: 'divider', id: 21, name: 'Divider', group: 'other', min: [4, 4],
       opts: [
-        { key: 'orient', type: 'seg', label: 'Направление', def: 'auto',
-          choices: [['auto', 'Авто'], ['h', 'Гориз.'], ['v', 'Верт.']] },
-        { key: 'style', type: 'seg', label: 'Линия', def: 'solid',
-          choices: [['solid', 'Сплошная'], ['dashed', 'Пунктир'], ['dotted', 'Точки']] },
-        { key: 'width', type: 'seg', label: 'Толщина', def: '1',
+        { key: 'orient', type: 'seg', label: 'Direction', def: 'auto',
+          choices: [['auto', 'Auto'], ['h', 'Horiz.'], ['v', 'Vert.']] },
+        { key: 'style', type: 'seg', label: 'Line', def: 'solid',
+          choices: [['solid', 'Solid'], ['dashed', 'Dashed'], ['dotted', 'Dotted']] },
+        { key: 'width', type: 'seg', label: 'Thickness', def: '1',
           choices: [['1', '1 px'], ['2', '2 px'], ['3', '3 px']] },
-        { key: 'inset', type: 'number', label: 'Отступ от краёв, px', def: 4, min: 0, max: 40, step: 1 }
+        { key: 'inset', type: 'number', label: 'Edge inset, px', def: 4, min: 0, max: 40, step: 1 }
       ],
       // An accent-colored line centered in the block. "Auto" runs along the longer side.
       render: function (box) {
@@ -701,22 +704,22 @@
   ];
 
   var GROUPS = [
-    ['base', 'Основное'],
-    ['time', 'Время'],
-    ['status', 'Состояние'],
-    ['health', 'Здоровье'],
-    ['weather', 'Погода'],
-    ['other', 'Прочее']
+    ['base', 'Basics'],
+    ['time', 'Time'],
+    ['status', 'Status'],
+    ['health', 'Health'],
+    ['weather', 'Weather'],
+    ['other', 'Other']
   ];
 
   // Horizontal alignment is a common option for all widgets: it shifts
   // block content to an edge or the center. For the time it means something else, see above.
-  var ALIGN_OPT = { key: 'align', type: 'seg', label: 'Выравнивание', def: 'center',
-    choices: [['left', 'Слева'], ['center', 'Центр'], ['right', 'Справа']] };
+  var ALIGN_OPT = { key: 'align', type: 'seg', label: 'Alignment', def: 'center',
+    choices: [['left', 'Left'], ['center', 'Center'], ['right', 'Right']] };
   LIST.forEach(function (w) {
     if (w.key === 'empty' || w.key === 'divider') return;
     // for the time, alignment applies inside the clock, not the block
-    var opt = w.key === 'time' ? Object.assign({}, ALIGN_OPT, { label: 'Выравнивание цифр' }) : ALIGN_OPT;
+    var opt = w.key === 'time' ? Object.assign({}, ALIGN_OPT, { label: 'Digit alignment' }) : ALIGN_OPT;
     w.opts = (w.opts || []).concat([opt]);
   });
 

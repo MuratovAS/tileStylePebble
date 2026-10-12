@@ -12,6 +12,8 @@
   var Layout = window.Layout;
   var Presets = window.Presets;
   var Raster = window.Raster;
+  var I18N = window.I18N;
+  var tr = I18N.t;
 
   var STORAGE_KEY = 'tilestyle.settings';
   var USER_PRESETS_KEY = 'tilestyle.presets';
@@ -391,7 +393,7 @@
           var active = resize && resize.axis === axis && resize.i === i;
           html += '<button type="button" class="gh gh-' + axis + (active ? ' active' : '') + '" data-axis="' + axis +
             '" data-i="' + i + '" style="' + (axis === 'cols' ? 'left' : 'top') + ':' + pct(off[i], total) +
-            '" aria-label="Граница ' + (axis === 'cols' ? 'столбцов ' : 'строк ') + i + '">' +
+            '" aria-label="' + esc(tr(axis === 'cols' ? 'Column border {n}' : 'Row border {n}', { n: i })) + '">' +
             (active ? '<span>' + arr[i - 1] + ' | ' + arr[i] + '</span>' : '') + '</button>';
         }
       });
@@ -461,17 +463,18 @@
     var shown = value || fallback;
     return '<button type="button" class="swatch' + (value ? '' : ' swatch-inherit') + '" data-color="' + path + '"' +
       (inheritLabel ? ' data-inherit="' + esc(inheritLabel) + '"' : '') +
-      ' style="--c:' + shown + '"><span>' + (value ? value : 'тема') + '</span></button>';
+      ' style="--c:' + shown + '"><span>' + (value ? value : esc(tr('theme'))) + '</span></button>';
   }
 
   function optionHTML(o, value, opts) {
     if (o.showIf && !o.showIf(opts)) return '';
     var id = 'opt-' + o.key;
-    var hint = o.hint ? '<small class="opt-hint">' + esc(o.hint) + '</small>' : '';
+    var hint = o.hint ? '<small class="opt-hint">' + esc(tr(o.hint)) + '</small>' : '';
+    var label = esc(tr(o.label));
     var ctl;
     if (o.type === 'select') {
       ctl = '<select id="' + id + '" data-opt="' + o.key + '">' + o.choices.map(function (c) {
-        return '<option value="' + c[0] + '"' + (c[0] === value ? ' selected' : '') + '>' + esc(c[1]) + '</option>';
+        return '<option value="' + c[0] + '"' + (c[0] === value ? ' selected' : '') + '>' + esc(tr(c[1])) + '</option>';
       }).join('') + '</select>';
     } else if (o.type === 'toggle') {
       ctl = '<label class="switch"><input type="checkbox" id="' + id + '" data-opt="' + o.key + '"' +
@@ -479,17 +482,17 @@
     } else if (o.type === 'seg') {
       ctl = '<div class="seg" data-opt-seg="' + o.key + '">' + o.choices.map(function (c) {
         return '<button type="button" data-v="' + c[0] + '"' + (c[0] === value ? ' class="active"' : '') + '>' +
-          esc(c[1]) + '</button>';
+          esc(tr(c[1])) + '</button>';
       }).join('') + '</div>';
-      return '<div class="field field-col"><span>' + esc(o.label) + '</span>' + ctl + '</div>';
+      return '<div class="field field-col"><span>' + label + '</span>' + ctl + '</div>';
     } else if (o.type === 'number') {
       ctl = '<input type="number" id="' + id + '" data-opt="' + o.key + '" value="' + esc(value) + '" min="' + o.min +
         '" max="' + o.max + '" step="' + o.step + '" inputmode="decimal">';
     } else {
       ctl = '<input type="text" id="' + id + '" data-opt="' + o.key + '" value="' + esc(value) + '" maxlength="' + o.max + '">';
     }
-    if (hint) return '<div class="field field-col"><label for="' + id + '">' + esc(o.label) + '</label>' + ctl + hint + '</div>';
-    return '<div class="field"><label for="' + id + '">' + esc(o.label) + '</label>' + ctl + '</div>';
+    if (hint) return '<div class="field field-col"><label for="' + id + '">' + label + '</label>' + ctl + hint + '</div>';
+    return '<div class="field"><label for="' + id + '">' + label + '</label>' + ctl + '</div>';
   }
 
   function renderInspector() {
@@ -497,15 +500,15 @@
     var sel = selectedBlocks();
 
     if (!sel.length) {
-      el.innerHTML = '<h2>Блок</h2><p class="muted">Выберите блок на циферблате.</p>';
+      el.innerHTML = '<h2>' + esc(tr('Block')) + '</h2><p class="muted">' + esc(tr('Select a block on the watch face.')) + '</p>';
       return;
     }
 
     if (sel.length > 1) {
-      el.innerHTML = '<h2>Выделено блоков: ' + sel.length + '</h2>' +
-        '<p class="muted">Область ' + state.sel.w + '×' + state.sel.h + '. Объединённый блок получит виджет ' +
-        'самого крупного непустого блока.</p>' +
-        '<button type="button" class="btn btn-accent btn-wide" data-action="merge">Объединить в один блок</button>';
+      el.innerHTML = '<h2>' + esc(tr('Blocks selected: {n}', { n: sel.length })) + '</h2>' +
+        '<p class="muted">' + esc(tr('Area {w}×{h}. The merged block gets the widget of the largest non-empty block.',
+          { w: state.sel.w, h: state.sel.h })) + '</p>' +
+        '<button type="button" class="btn btn-accent btn-wide" data-action="merge">' + esc(tr('Merge into one block')) + '</button>';
       return;
     }
 
@@ -517,29 +520,31 @@
     var isEmpty = b.widget === 'empty';
     var pickBtn = '<button type="button" class="widget-btn' + (isEmpty ? ' widget-btn-empty' : '') + '" data-action="pick">' +
       W.icon(b.widget, 26, 'currentColor') +
-      '<span><small>Виджет</small>' + esc(isEmpty ? 'Выбрать виджет' : def.name) + '</span><b>›</b></button>';
+      '<span><small>' + esc(tr('Widget')) + '</small>' + esc(tr(isEmpty ? 'Pick a widget' : def.name)) + '</span><b>›</b></button>';
 
     var optsHTML = (def.opts || []).map(function (o) { return optionHTML(o, opts[o.key], opts); }).join('');
 
     var t = state.theme;
+    var inherit = tr('Same as theme');
     var colors = '<div class="colors">' +
-      '<div><small>Фон</small>' + swatchHTML('block.bg', b.bg, 'Как в теме', t.tile || t.bg) + '</div>' +
-      '<div><small>Текст</small>' + swatchHTML('block.fg', b.fg, 'Как в теме', t.fg) + '</div>' +
-      '<div><small>Акцент</small>' + swatchHTML('block.accent', b.accent, 'Как в теме', t.accent) + '</div>' +
+      '<div><small>' + esc(tr('Background')) + '</small>' + swatchHTML('block.bg', b.bg, inherit, t.tile || t.bg) + '</div>' +
+      '<div><small>' + esc(tr('Text')) + '</small>' + swatchHTML('block.fg', b.fg, inherit, t.fg) + '</div>' +
+      '<div><small>' + esc(tr('Accent')) + '</small>' + swatchHTML('block.accent', b.accent, inherit, t.accent) + '</div>' +
       '</div>';
 
     el.innerHTML =
-      '<div class="insp-head"><h2>Блок</h2><span class="tag">' + b.w + '×' + b.h + ' ячеек · ' +
-        Math.round(px.w) + '×' + Math.round(px.h) + ' px</span></div>' +
+      '<div class="insp-head"><h2>' + esc(tr('Block')) + '</h2><span class="tag">' +
+        esc(tr('{w}×{h} cells · {pw}×{ph} px', { w: b.w, h: b.h, pw: Math.round(px.w), ph: Math.round(px.h) })) + '</span></div>' +
       pickBtn +
-      (def.note ? '<p class="note">' + esc(def.note) + '</p>' : '') +
-      (blockFits(b) ? '' : '<p class="note">Блок меньше, чем нужно виджету (' + W.minSize(b.widget).join('×') +
-        ' px). Увеличьте блок или измените пропорции сетки.</p>') +
+      (def.note ? '<p class="note">' + esc(tr(def.note)) + '</p>' : '') +
+      (blockFits(b) ? '' : '<p class="note">' + esc(tr(
+        'The block is smaller than the widget needs ({min} px). Make the block bigger or change the grid proportions.',
+        { min: W.minSize(b.widget).join('×') })) + '</p>') +
       (optsHTML ? '<div class="opts">' + optsHTML + '</div>' : '') +
-      '<h3>Цвета блока</h3>' + colors +
+      '<h3>' + esc(tr('Block colors')) + '</h3>' + colors +
       '<div class="insp-actions">' +
-        (b.w * b.h > 1 ? '<button type="button" class="btn" data-action="split">Разделить на ячейки</button>' : '') +
-        (!isEmpty ? '<button type="button" class="btn" data-action="clear">Очистить</button>' : '') +
+        (b.w * b.h > 1 ? '<button type="button" class="btn" data-action="split">' + esc(tr('Split into cells')) + '</button>' : '') +
+        (!isEmpty ? '<button type="button" class="btn" data-action="clear">' + esc(tr('Clear')) + '</button>' : '') +
       '</div>';
   }
 
@@ -547,17 +552,17 @@
     var b = selectedBlock();
     if (!b) return;
     var bpx = blockPx(b);
-    $('#widgetSheetTitle').textContent = 'Виджет для блока ' + Math.round(bpx.w) + '×' + Math.round(bpx.h) + ' px';
+    $('#widgetSheetTitle').textContent = tr('Widget for a {w}×{h} px block', { w: Math.round(bpx.w), h: Math.round(bpx.h) });
     $('#widgetPicker').innerHTML = W.GROUPS.map(function (g) {
       var items = W.LIST.filter(function (w) { return w.group === g[0]; });
-      return '<div class="wgroup"><div class="wgroup-title">' + esc(g[1]) + '</div><div class="wgrid">' +
+      return '<div class="wgroup"><div class="wgroup-title">' + esc(tr(g[1])) + '</div><div class="wgrid">' +
         items.map(function (w) {
           var ok = blockFits(b, w.key);
           var m = W.minSize(w.key).join('×');
           return '<button type="button" class="wchip' + (w.key === b.widget ? ' active' : '') + '" data-widget="' + w.key + '"' +
-            (ok ? '' : ' disabled title="Нужен блок от ' + m + ' px"') + '>' +
-            W.icon(w.key, 20, 'currentColor') + '<span>' + esc(w.name) + '</span>' +
-            (ok ? '' : '<em>от ' + m + ' px</em>') + '</button>';
+            (ok ? '' : ' disabled title="' + esc(tr('Needs a block of at least {min} px', { min: m })) + '"') + '>' +
+            W.icon(w.key, 20, 'currentColor') + '<span>' + esc(tr(w.name)) + '</span>' +
+            (ok ? '' : '<em>' + esc(tr('min {min} px', { min: m })) + '</em>') + '</button>';
         }).join('') + '</div></div>';
     }).join('');
     $('#widgetSheet').hidden = false;
@@ -641,14 +646,14 @@
       var v = getPath(path);
       sw.classList.toggle('swatch-inherit', !v);
       sw.style.setProperty('--c', v || state.theme.bg);
-      sw.innerHTML = '<span>' + (v || (path === 'theme.iconFill' ? 'как фон блока' : 'как фон')) + '</span>';
+      sw.innerHTML = '<span>' + (v || esc(tr(path === 'theme.iconFill' ? 'same as block' : 'same as screen'))) + '</span>';
     });
     $('#weatherLocField').hidden = state.general.weatherSource !== 'manual';
     $('#lineOpts').hidden = !state.theme.lineOn;
     var loc = $('#weatherLoc');
     if (document.activeElement !== loc && loc.value !== state.general.weatherLocation) loc.value = state.general.weatherLocation;
     var gen = state.general;
-    $('#weatherCoords').textContent = gen.weatherLat !== null ? 'Координаты: ' + gen.weatherLat + ', ' + gen.weatherLon : '';
+    $('#weatherCoords').textContent = gen.weatherLat !== null ? tr('Coordinates: {lat}, {lon}', { lat: gen.weatherLat, lon: gen.weatherLon }) : '';
   }
 
   function bindSettings() {
@@ -706,7 +711,7 @@
   }
 
   function renderSuggestions() {
-    if (!suggest.items.length) return showSuggest('<div class="suggest-note">Ничего не найдено</div>');
+    if (!suggest.items.length) return showSuggest('<div class="suggest-note">' + esc(tr('Nothing found')) + '</div>');
     showSuggest(suggest.items.map(function (it, i) {
       var name = it.name || it.display_name.split(',')[0];
       var rest = it.display_name.indexOf(name + ', ') === 0 ? it.display_name.slice(name.length + 2) : it.display_name;
@@ -718,7 +723,7 @@
   function search(query) {
     var seq = ++suggest.seq;
     var url = GEOCODER + '?format=json&addressdetails=1&limit=6&accept-language=' +
-      encodeURIComponent((navigator.language || 'ru').slice(0, 2)) + '&q=' + encodeURIComponent(query);
+      encodeURIComponent(I18N.lang) + '&q=' + encodeURIComponent(query);
     fetch(url).then(function (r) {
       if (!r.ok) throw new Error('HTTP ' + r.status);
       return r.json();
@@ -729,7 +734,7 @@
       renderSuggestions();
     }).catch(function () {
       if (seq !== suggest.seq) return;
-      showSuggest('<div class="suggest-note">Не удалось получить подсказки. Проверьте подключение к интернету.</div>');
+      showSuggest('<div class="suggest-note">' + esc(tr('Couldn’t load suggestions. Check your internet connection.')) + '</div>');
     });
   }
 
@@ -760,7 +765,7 @@
       clearTimeout(suggest.timer);
       suggest.seq++;
       if (q.trim().length < 3) return showSuggest('');
-      showSuggest('<div class="suggest-note">Ищем…</div>');
+      showSuggest('<div class="suggest-note">' + esc(tr('Searching…')) + '</div>');
       suggest.timer = setTimeout(function () { search(q.trim()); }, 1000);
     });
 
@@ -898,7 +903,7 @@
 
   function renderPresets() {
     $('#presets').innerHTML = Presets.map(function (p, i) {
-      return thumbHTML('data-preset="' + i + '"', p.name);
+      return thumbHTML('data-preset="' + i + '"', tr(p.name));
     }).join('');
     $$('#presets canvas').forEach(function (cv, i) { drawThumb(cv, Presets[i]); });
     renderUserPresets();
@@ -926,10 +931,10 @@
     var list = loadUserPresets();
     $('#userPresets').innerHTML = list.map(function (p) {
       return '<div class="preset-item">' + thumbHTML('data-user="' + esc(p.id) + '"', p.name) +
-        '<button type="button" class="preset-del" data-del="' + esc(p.id) + '">Удалить</button></div>';
+        '<button type="button" class="preset-del" data-del="' + esc(p.id) + '">' + esc(tr('Delete')) + '</button></div>';
     }).join('');
     $$('#userPresets canvas').forEach(function (cv, i) { drawThumb(cv, list[i]); });
-    $('#userPresetsNote').textContent = note || (list.length ? '' : 'Здесь появятся раскладки, которые вы сохраните.');
+    $('#userPresetsNote').textContent = note || (list.length ? '' : tr('Layouts you save will appear here.'));
   }
 
   function findUserPreset(id) {
@@ -941,7 +946,7 @@
     form.hidden = false;
     $('#savePresetBtn').hidden = true;
     var input = $('#presetName');
-    input.value = 'Раскладка ' + (loadUserPresets().length + 1);
+    input.value = tr('Layout {n}', { n: loadUserPresets().length + 1 });
     input.focus();
     input.select();
   }
@@ -967,7 +972,7 @@
 
     $('#savePresetForm').addEventListener('submit', function (e) {
       e.preventDefault();
-      var name = $('#presetName').value.trim() || 'Раскладка';
+      var name = $('#presetName').value.trim() || tr('Layout');
       var cfg = buildConfig();
       var list = loadUserPresets();
       list.push({
@@ -979,7 +984,7 @@
       });
       var saved = saveUserPresets(list);
       closeSaveForm();
-      renderUserPresets(saved ? '' : 'Не удалось сохранить: браузер не даёт записывать данные.');
+      renderUserPresets(saved ? '' : tr('Couldn’t save: the browser doesn’t allow storing data.'));
     });
 
     // deletion requires a second tap to confirm
@@ -988,17 +993,17 @@
       if (del) {
         if (!del.classList.contains('confirm')) {
           del.classList.add('confirm');
-          del.textContent = 'Точно удалить?';
+          del.textContent = tr('Really delete?');
           setTimeout(function () {
             if (!del.isConnected) return;
             del.classList.remove('confirm');
-            del.textContent = 'Удалить';
+            del.textContent = tr('Delete');
           }, 3000);
           return;
         }
         var id = del.getAttribute('data-del');
         var ok = saveUserPresets(loadUserPresets().filter(function (p) { return p.id !== id; }));
-        renderUserPresets(ok ? '' : 'Не удалось удалить: браузер не даёт записывать данные.');
+        renderUserPresets(ok ? '' : tr('Couldn’t delete: the browser doesn’t allow storing data.'));
         return;
       }
       var btn = e.target.closest('[data-user]');
@@ -1016,10 +1021,10 @@
   function renderWarnings() {
     var list = [];
     var keys = state.blocks.map(function (b) { return b.widget; });
-    if (keys.indexOf('time') === -1) list.push('На циферблате нет виджета времени.');
+    if (keys.indexOf('time') === -1) list.push(tr('The watch face has no time widget.'));
     state.blocks.forEach(function (b) {
       if (b.widget !== 'empty' && !blockFits(b)) {
-        list.push('Виджет «' + W.get(b.widget).name + '» не помещается в свой блок.');
+        list.push(tr('The “{name}” widget doesn’t fit its block.', { name: tr(W.get(b.widget).name) }));
       }
     });
     state.blocks.forEach(function (b) {
@@ -1029,8 +1034,8 @@
         : b.widget === 'date' && o.format === 'custom' ? W.formatDate(new Date(), o.pattern, W.LANG, o.upper) : '';
       var bad = str ? Raster.unsupported(str) : '';
       if (bad) {
-        list.push('Символов «' + bad + '» нет в шрифтах часов (виджет «' + W.get(b.widget).name +
-          '») — на часах вместо них будет ▯.');
+        list.push(tr('The watch fonts can’t show “{chars}” (“{name}” widget); the watch will show ▯ instead.',
+          { chars: bad, name: tr(W.get(b.widget).name) }));
       }
     });
     state.blocks.forEach(function (b) {
@@ -1040,15 +1045,40 @@
       var text = W.formatDate(new Date(2026, 8, 30), W.datePattern(o), W.LANG, o.upper); // Wednesday and September are the longest names
       var room = blockPx(b).w - 8;
       var tooWide = text.split('|').some(function (line) { return Raster.textWidth(line, 14) > room; });
-      if (tooWide) list.push('Дата в выбранном формате не помещается в свой блок — выберите формат короче или расширьте блок.');
+      if (tooWide) list.push(tr('The date in this format doesn’t fit its block. Pick a shorter format or make the block wider.'));
     });
-    if (keys.indexOf('seconds') !== -1) list.push('Секунды заметно сокращают время работы от батареи.');
+    if (keys.indexOf('seconds') !== -1) list.push(tr('Seconds noticeably shorten battery life.'));
     var needsWeather = keys.some(function (k) { return W.get(k).group === 'weather'; });
-    if (needsWeather && state.general.weatherSource === 'off') list.push('Погода выключена в общих настройках — погодные виджеты будут пустыми.');
+    if (needsWeather && state.general.weatherSource === 'off') list.push(tr('Weather is off in the general settings, so weather widgets will be empty.'));
     if (needsWeather && state.general.weatherSource === 'manual' && state.general.weatherLat === null) {
-      list.push('Выберите город для погоды из подсказок — так сохранятся его координаты.');
+      list.push(tr('Pick the weather city from the suggestions so that its coordinates are saved.'));
     }
     $('#warnings').innerHTML = list.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('');
+  }
+
+  // --- page language ---------------------------------------------------
+
+  function renderLangSwitch() {
+    $$('#langSwitch [data-lang]').forEach(function (btn) {
+      var on = btn.getAttribute('data-lang') === I18N.lang;
+      btn.classList.toggle('active', on);
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  }
+
+  function translatePage() {
+    I18N.apply(document);
+    renderLangSwitch();
+  }
+
+  // Only the texts are rebuilt: edits, history and the selection stay
+  function setLanguage(lang) {
+    if (lang === I18N.lang) return;
+    I18N.setLang(lang);
+    translatePage();
+    renderPresets();
+    render();
+    if (!$('#widgetSheet').hidden) openWidgetSheet();
   }
 
   // --- main loop -------------------------------------------------------
@@ -1076,6 +1106,7 @@
   }
 
   function init() {
+    translatePage();
     migrateStorage();
     loadInitial();
     // select the time block by default
@@ -1101,6 +1132,10 @@
     });
     $('#saveBtn').addEventListener('click', save);
     $('#cancelBtn').addEventListener('click', cancel);
+    $('#langSwitch').addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-lang]');
+      if (btn) setLanguage(btn.getAttribute('data-lang'));
+    });
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape') closeSheets();
       if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) {
@@ -1113,7 +1148,6 @@
     window.addEventListener('resize', fitWatch);
     renderPresets();
     render();
-
 
     // live clock in the preview
     setInterval(renderScreen, 1000);
