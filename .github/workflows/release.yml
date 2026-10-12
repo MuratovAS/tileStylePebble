@@ -14,24 +14,27 @@ defaults:
 
 jobs:
   version:
-    name: Check tag against package.json
+    name: Version from tag
     runs-on: ubuntu-24.04
     outputs:
       version: ${{ steps.check.outputs.version }}
     steps:
-      - uses: actions/checkout@v7
       - id: check
         run: |
-          version=$(jq -r .version package.json)
-          if [[ "$GITHUB_REF" != "refs/tags/v$version" ]]; then
-            echo "::error::$GITHUB_REF does not match package.json version $version (expected tag v$version)"
+          # v1.2.3 or v1.2.3-beta.1; the watch shows major.minor, each 0..255
+          if [[ "$GITHUB_REF" =~ ^refs/tags/v((0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?)$ ]] \
+              && (( BASH_REMATCH[2] <= 255 && BASH_REMATCH[3] <= 255 )); then
+            echo "version=${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::$GITHUB_REF is not a release tag like v1.2.3 (major and minor 0..255)"
             exit 1
           fi
-          echo "version=$version" >> "$GITHUB_OUTPUT"
 
   ci:
     needs: version
     uses: ./.github/workflows/ci.yml
+    with:
+      version: ${{ needs.version.outputs.version }}
 
   release:
     needs: [version, ci]

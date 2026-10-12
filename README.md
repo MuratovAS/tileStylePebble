@@ -134,19 +134,20 @@ GitHub Actions (`.github/workflows/`):
 - `ci.yml` runs on every push and pull request. It runs the tests and builds
   the watchface; a compiler warning in `src/c/` fails the build. The `.pbw` is
   attached to the run as the `tilestyle.pbw` artifact.
-- `release.yml` runs on `v*` tags. It runs CI, checks that the tag matches
-  `version` in `package.json`, and publishes a GitHub release with
-  `tilestyle-<version>.pbw`.
+- `release.yml` runs on `v*` tags. The tag sets the version: CI writes it
+  into `package.json` before building, then the workflow publishes a GitHub
+  release with `tilestyle-<version>.pbw`. The tag must look like `v1.2.3` or
+  `v1.2.3-beta.1`; the watch shows only major.minor (0–255 each).
 - The `gh-pages` branch has its own workflow that runs the same tests against
   `main` when the settings page changes.
 
 To cut a release:
 
-    npm version 1.0.1 --no-git-tag-version   # bump package.json and the lock file
-    git commit -am "Release 1.0.1"
     git tag v1.0.1
-    git push origin main v1.0.1
+    git push origin v1.0.1
 
+Keep `version` in `package.json` at the latest release so local builds report
+it too.
 ### Generated files
 
 Don't edit these by hand; regenerate them:

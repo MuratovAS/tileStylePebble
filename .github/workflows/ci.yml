@@ -5,6 +5,11 @@ on:
     branches: ["**"] # tags are handled by release.yml
   pull_request:
   workflow_call: # reused by release.yml
+    inputs:
+      version:
+        description: Version to stamp into package.json before building (from the release tag)
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -41,6 +46,11 @@ jobs:
           cache: npm
       - uses: ./.github/actions/setup-pebble
       - run: npm ci
+      - name: Set version
+        if: inputs.version != ''
+        env:
+          VERSION: ${{ inputs.version }}
+        run: npm version "$VERSION" --no-git-tag-version --allow-same-version
       - name: Build
         run: pebble build 2>&1 | tee build.log
       - name: Fail on compiler warnings in src/c
