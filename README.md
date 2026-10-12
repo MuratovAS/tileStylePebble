@@ -1,154 +1,166 @@
 # TileStyle
 
-A fully customizable Pebble Time 2 watchface: split the screen into a 4×4 grid,
-merge cells into blocks and fill each with a widget — time, date, weather,
-health and more.
-
-Настраиваемый циферблат для Pebble Time 2 (платформа `emery`, 200×228,
-64 цвета). Экран делится на сетку 4×4, ячейки объединяются в прямоугольные
-блоки, в каждый блок ставится виджет. Идея и шрифты — от
-[TimeStyle](https://github.com/freakified/TimeStylePebble).
+A fully customizable watchface for Pebble Time 2 (platform `emery`, 200×228,
+64 colors). Split the screen into a 4×4 grid, merge cells into blocks and fill
+each block with a widget: time, date, weather, health and more. Inspired by
+[TimeStyle](https://github.com/freakified/TimeStylePebble) and built on its
+fonts and icons.
 
 <p>
-  <img src="screenshots/timestyle.png" alt="TimeStyle" width="200">
-  <img src="screenshots/dashboard.png" alt="Дашборд" width="200">
-  <img src="screenshots/world.png" alt="Мир" width="200">
+  <img src="screenshots/timestyle.png" alt="TimeStyle preset" width="200">
+  <img src="screenshots/dashboard.png" alt="Dashboard preset" width="200">
+  <img src="screenshots/world.png" alt="World preset" width="200">
 </p>
 <p>
-  <img src="screenshots/sport.png" alt="Спорт" width="200">
-  <img src="screenshots/paper.png" alt="Бумага" width="200">
-  <img src="screenshots/neon.png" alt="Неон" width="200">
+  <img src="screenshots/sport.png" alt="Sport preset" width="200">
+  <img src="screenshots/paper.png" alt="Paper preset" width="200">
+  <img src="screenshots/neon.png" alt="Neon preset" width="200">
 </p>
 
-## Возможности
+## Features
 
-- **Сетка 4×4.** Ширину столбцов и высоту строк можно двигать (минимум 20 px),
-  ячейки можно объединять в блоки любого размера.
-- **Виджеты:**
-  - время (Avenir, Avenir DemiBold, LECO; в строку или часы над минутами);
-  - дата по шаблону или «листок календаря», день недели, секунды, номер недели,
-    второй часовой пояс, Swatch .beat;
-  - батарея, Bluetooth;
-  - шаги (с целью и графиком по часам), дистанция, калории, пульс, сон;
-  - погода сейчас, мин/макс на сегодня, УФ-индекс, почасовой прогноз
-    (колонки или график);
-  - свой текст, разделитель.
-- **Оформление:**
-  - цвета темы и отдельно для каждого блока;
-  - отступы и скругления блоков;
-  - линии между блоками: сплошные, пунктир или точки.
-- **12 готовых раскладок** и свои, сохранённые на телефоне.
-- **Погода** из [Open-Meteo](https://open-meteo.com/) без ключа API, место
-  определяется по GPS или выбирается вручную.
-- **Превью страницы настроек** показывает экран попиксельно, как на часах:
-  те же шрифты прошивки, иконки и раскладка.
+- **4×4 grid.** Column widths and row heights are adjustable (20 px minimum),
+  and cells merge into blocks of any rectangular size.
+- **Widgets:**
+  - time (Avenir, Avenir DemiBold or LECO; on one line or hours over minutes);
+  - date from a pattern or as a calendar sheet, weekday, seconds, week
+    number, second time zone, Swatch .beat;
+  - battery, Bluetooth;
+  - steps (with a goal bar and an hourly chart), distance, calories, heart
+    rate, sleep;
+  - current weather, today's high/low, UV index, hourly forecast (columns or
+    a temperature graph);
+  - custom text, divider.
+- **Styling:**
+  - theme colors, plus per-block overrides;
+  - gaps and rounded corners between blocks;
+  - lines between blocks: solid, dashed or dotted.
+- **12 built-in layouts**, plus your own layouts saved on the phone.
+- **Weather** from [Open-Meteo](https://open-meteo.com/), no API key needed.
+  The location comes from GPS or is picked by hand.
+- **Pixel-exact preview.** The settings page draws the screen exactly as the
+  watch does: same firmware fonts, icons and layout.
 
-Подписи на часах английские: в шрифтах прошивки нет кириллицы.
+On-watch labels are in English: the firmware fonts have no Cyrillic.
 
-## Использование
+## Usage
 
-1. Установите `.pbw` на часы через приложение Pebble (или соберите сам, см.
-   ниже).
-2. Откройте настройки циферблата в приложении. Откроется страница настроек
-   (<https://muratovas.github.io/tileStylePebble/>):
-   - выделите на превью ячейки и объедините их в блок;
-   - выберите для блока виджет и его опции;
-   - настройте тему, сетку и общие параметры: 12/24 ч, единицы, погода,
-     вибрация при потере связи.
-3. Нажмите «Сохранить»: настройки уйдут на часы, а погода обновится, если в
-   раскладке есть погодные виджеты.
+1. Install the `.pbw` on the watch through the Pebble app, or build it
+   yourself (see below).
+2. Open the watchface settings in the Pebble app. This opens the settings
+   page (<https://muratovas.github.io/tileStylePebble/>), where you can:
+   - select cells on the preview and merge them into a block;
+   - choose a widget for the block and set its options;
+   - set up the theme, grid and general options: 12/24 h, units, weather,
+     vibration on disconnect.
+3. Tap Save. The settings are sent to the watch, and the weather is refreshed
+   if the layout has weather widgets.
 
-Пока настроек нет, часы показывают раскладку TimeStyle.
+Until it is configured, the watch shows the TimeStyle layout.
 
-## Сборка
+The page is available in English and Russian. It follows the browser language;
+use the EN / RU switch in the header or `?lang=en` to change it.
 
-Нужны Pebble SDK 4.x, Node.js и npm. SDK ставится вместе с утилитой
-`pebble`:
+<p>
+  <img src="screenshots/settings-desktop.png" alt="Settings page: preview, layouts and block options" width="820">
+</p>
+<p>
+  <img src="screenshots/settings-mobile-1.png" alt="Settings page on a phone: widget picker" width="300">
+  <img src="screenshots/settings-mobile-2.png" alt="Settings page on a phone: theme and general settings" width="300">
+</p>
+
+## Building
+
+You need Pebble SDK 4.x, Node.js and npm. The SDK is installed with the
+`pebble` tool:
 
     uv tool install pebble-tool
     pebble sdk install latest
 
+Then:
+
     git clone git@github.com:MuratovAS/tileStylePebble.git
     cd tileStylePebble
-    npm install                             # библиотека pebble-fctx
+    npm install                             # pebble-fctx library
     pebble build                            # -> build/tileStylePebble.pbw
 
-Запуск:
+To run it:
 
-    pebble install --emulator emery         # в эмуляторе Pebble Time 2
-    pebble install --phone <IP телефона>    # на часы через приложение Pebble
+    pebble install --emulator emery         # Pebble Time 2 emulator
+    pebble install --phone <phone IP>       # real watch, via the Pebble app
 
-Страница настроек (ветка `gh-pages`) подключается рабочей копией в папку
-`config/`. Для сборки часов она не нужна, но её используют генераторы и
-тесты из `tools/`:
+The settings page (branch `gh-pages`) is checked out into `config/` as a
+worktree. The watchface builds without it, but the generators and tests in
+`tools/` need it:
 
     git worktree add config gh-pages
 
-## Устройство репозитория
+## Repository layout
 
-Ветки устроены как в TimeStyle:
+The branches follow TimeStyle:
 
-- `main` — циферблат: код для часов и телефона, ресурсы, инструменты.
-- `gh-pages` — страница настроек (статический HTML без сборки), её отдаёт
-  GitHub Pages. Изменения страницы коммитятся из `config/`.
+- `main`: the watchface, with watch and phone code, resources and tools.
+- `gh-pages`: the settings page, plain static HTML with no build step,
+  served by GitHub Pages. Commit page changes from `config/`.
 
-| Путь | Что внутри |
+| Path | Contents |
 |---|---|
-| `src/c/` | код часов: слой на каждый блок, виджеты, отрисовка, данные (Health, батарея, Bluetooth, погода), хранение настроек |
-| `src/c/protocol.h` | обмен телефон ↔ часы: ключи сообщений, бинарные форматы настроек и погоды, id виджетов |
-| `src/pkjs/` | код для телефона: открытие страницы настроек, перевод настроек в бинарный формат, погода Open-Meteo, очередь сообщений |
-| `resources/` | шрифты цифр (`.ffont`) и иконки 14/18/25/36/50 px с исходниками |
-| `tools/` | генераторы ресурсов и таблиц, тесты, отправка настроек в эмулятор |
-| `config/` | страница настроек, рабочая копия `gh-pages` (в `main` игнорируется) |
+| `src/c/` | watch code: one layer per block, widgets, drawing, data (Health, battery, Bluetooth, weather), settings storage |
+| `src/c/protocol.h` | phone ↔ watch protocol: message keys, binary settings and weather formats, widget ids |
+| `src/pkjs/` | phone code: opens the settings page, encodes settings into the binary format, fetches weather from Open-Meteo, queues messages |
+| `resources/` | clock digit fonts (`.ffont`) and icons in 14/18/25/36/50 px, with their sources |
+| `tools/` | resource and table generators, tests, sending settings to the emulator |
+| `config/` | the settings page, a `gh-pages` worktree (ignored in `main`) |
 
-Виджеты на C перенесены построчно из `config/js/widgets.js` и
-`config/js/raster.js`. Поэтому часы рисуют то же, что превью, и при изменении
-виджета нужно править обе стороны.
+The C widgets are line-by-line ports of `config/js/widgets.js` and
+`config/js/raster.js`. That is why the watch draws what the preview shows, and
+also why a widget change has to be made on both sides.
 
-## Разработка
+## Development
 
-Тесты кода для телефона и бинарного формата:
+Tests for the phone code and the binary format:
 
     node tools/test_protocol.js && node tools/test_pkjs.js
 
-Отправка раскладки и погоды в запущенный эмулятор, без страницы настроек:
+Send a layout and weather to a running emulator, without the settings page:
 
     node tools/encode_config.js --list-presets
     python3 tools/send_appmessage.py --preset dashboard --demo-weather
     python3 tools/send_appmessage.py --config settings.json --live-weather 55.75,37.62
 
-Демо-сборка подставляет тестовые данные превью (`MOCK` из `widgets.js`)
-вместо Health и погоды. `DEMO_TIME` замораживает часы, так скриншот эмулятора
-можно сравнить с превью попиксельно:
+A demo build replaces Health and weather with the preview's mock data (`MOCK`
+in `widgets.js`), and `DEMO_TIME` freezes the clock. This lets you diff an
+emulator screenshot against the preview pixel by pixel:
 
-    touch src/c/*.c                         # waf не замечает смену переменных
+    touch src/c/*.c                         # waf ignores environment changes
     DEMO=1 DEMO_TIME=1791799717 pebble build
     pebble screenshot --emulator emery --no-correction shot.png
 
-### Сгенерированные файлы
+### Generated files
 
-Их не правят руками, а пересобирают:
+Don't edit these by hand; regenerate them:
 
-| Файл | Команда | Источник |
+| File | Command | Source |
 |---|---|---|
-| `resources/icons/*.png` | `python3 tools/icons.py render` | `resources/icons_src/`, векторы из `widgets.js` |
+| `resources/icons/*.png` | `python3 tools/icons.py render` | `resources/icons_src/`, vectors in `widgets.js` |
 | `config/js/icons.js` | `python3 tools/icons.py js` | `resources/icons/*.png` |
-| `package.json` (иконки), `src/c/gen_icons.h` | `python3 tools/icons.py resources` | `resources/icons/*.png` |
+| `package.json` (icons), `src/c/gen_icons.h` | `python3 tools/icons.py resources` | `resources/icons/*.png` |
 | `src/c/gen_tables.c` | `python3 tools/gen_tables.py` | `config/js/sysfonts.js`, `config/js/fonts.js` |
-| `config/js/sysfonts.js` | `python3 tools/pbf2js.py <PebbleOS>/resources > config/js/sysfonts.js` | шрифты прошивки из [PebbleOS](https://github.com/coredevices/PebbleOS) |
+| `config/js/sysfonts.js` | `python3 tools/pbf2js.py <PebbleOS>/resources > config/js/sysfonts.js` | firmware fonts from [PebbleOS](https://github.com/coredevices/PebbleOS) |
 | `config/js/fonts.js` | `python3 tools/ffont2js.py resources/fonts > config/js/fonts.js` | `resources/fonts/*.ffont` |
 
-Для `icons.py render` и `gen_tables.py` нужен headless Chromium: `chromium`
-в `PATH`, браузер Playwright или путь в переменной `CHROME`.
+`icons.py render` and `gen_tables.py` need a headless Chromium: `chromium` on
+`PATH`, the Playwright browser, or a path in the `CHROME` variable.
 
-Иконки двухцветные, как в TimeStyle: PNG с палитрой из прозрачного, белого
-(заливка) и чёрного (обводка). Часы перекрашивают их сменой палитры: обводка
-берёт цвет акцента блока, заливка — «Заливку иконок» из темы или фон блока.
+Icons are two-color, as in TimeStyle: a PNG with a palette of transparent,
+white (fill) and black (outline). The watch recolors them by swapping palette
+entries. The outline takes the block's accent color. The fill takes the
+theme's icon fill color, or the block background if that is not set.
 
-### Формат настроек
+### Settings format
 
-Страница сохраняет настройки в JSON (v1). Код телефона переводит их в
-компактный бинарный блоб, описанный в `src/c/protocol.h`.
+The page saves settings as JSON (v1). The phone code encodes them into the
+compact binary blob described in `src/c/protocol.h`.
 
 ```json
 {
@@ -163,28 +175,30 @@ health and more.
   "theme": { "bg": "#000000", "tile": null, "fg": "#FFFFFF", "accent": "#FF5500", "iconFill": "#FFFFFF",
              "gap": 0, "radius": 0, "lineOn": false, "lineWidth": 1, "lineColor": "#FFFFFF", "lineStyle": "solid" },
   "general": { "clock24": true, "metric": true, "btVibe": true,
-               "weatherSource": "manual", "weatherLocation": "Москва, Россия",
+               "weatherSource": "manual", "weatherLocation": "Moscow, Russia",
                "weatherLat": 55.7505, "weatherLon": 37.6175, "weatherInterval": 30 }
 }
 ```
 
-- `grid` — ширины столбцов и высоты строк в пикселях. Суммы всегда 200 и 228.
-- `layout` — блоки в ячейках сетки, покрывают все 16 ячеек ровно по разу.
-  `bg`/`fg`/`accent` блока необязательны, без них берутся цвета темы.
-  В `opts` лежат все опции виджета, включая значения по умолчанию.
-- `theme.tile: null` — у блоков нет своего фона; `iconFill: null` — заливка
-  иконок цветом фона блока. `gap` вычитается пополам с внутренних сторон блоков.
-- `weatherSource`: `gps`, `manual` (координаты места из подсказок
-  OpenStreetMap Nominatim) или `off`.
+- `grid`: column widths and row heights in pixels. They always sum to 200 and
+  228.
+- `layout`: blocks in grid cells, covering each of the 16 cells exactly once.
+  A block's `bg`/`fg`/`accent` are optional and default to the theme colors.
+  `opts` always holds every widget option, defaults included.
+- `theme.tile: null` means blocks have no background of their own;
+  `iconFill: null` fills icons with the block background. Half of `gap` is
+  taken from each inner side of a block.
+- `weatherSource`: `gps`, `manual` (coordinates of a place picked from
+  OpenStreetMap Nominatim suggestions) or `off`.
 
-Страница принимает текущие настройки параметром `?config=<json>`. При
-сохранении она переходит на `return_to` (по умолчанию `pebblejs://close#`)
-с JSON в хэше.
+The page reads the current settings from a `?config=<json>` parameter. On
+save it navigates to `return_to` (`pebblejs://close#` by default) with the
+JSON in the hash.
 
-## Благодарности
+## Credits
 
-- [TimeStyle](https://github.com/freakified/TimeStylePebble) (MIT): иконки,
-  шрифты цифр, подход к погоде и странице настроек.
-- [pebble-fctx](https://github.com/jrmobley/pebble-fctx): векторные цифры
-  времени.
-- [Open-Meteo](https://open-meteo.com/): погода.
+- [TimeStyle](https://github.com/freakified/TimeStylePebble) (MIT): icons,
+  clock digit fonts, and the approach to weather and the settings page.
+- [pebble-fctx](https://github.com/jrmobley/pebble-fctx): vector clock
+  digits.
+- [Open-Meteo](https://open-meteo.com/): weather data.
