@@ -59,7 +59,7 @@ function generalOf(cfg) {
   return cfg && isObj(cfg.general) ? cfg.general : protocol.GENERAL_DEFAULTS;
 }
 
-// No stored settings: the watch shows presets[0], which has a weather widget
+// No stored settings: the watch shows the "timestyle" preset, which has a weather widget
 function weatherWanted(cfg) {
   return generalOf(cfg).weatherSource !== 'off' && protocol.needsWeather(cfg);
 }

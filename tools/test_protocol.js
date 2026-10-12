@@ -28,6 +28,8 @@ function loadPage(file, name) {
 }
 var Widgets = loadPage('widgets.js', 'Widgets');
 var Presets = tool.loadPresets();
+// the default layout (config.js DEFAULT_PRESET), not necessarily the first one
+var DefaultPreset = Presets.filter(function (p) { return p.key === 'timestyle'; })[0];
 
 function plain(x) { return JSON.parse(JSON.stringify(x)); }
 
@@ -241,12 +243,12 @@ test('tables match widgets.js', function () {
   ['day_month', 'numeric', 'full', 'nonsense'].forEach(function (f) {
     assert.strictEqual(protocol.datePattern({ format: f }), Widgets.datePattern({ format: f }), f);
   });
-  // theme defaults = presets[0].theme + config.js THEME_DEFAULTS
-  Object.keys(Presets[0].theme).forEach(function (k) {
-    assert.strictEqual(protocol.THEME_DEFAULTS[k], Presets[0].theme[k], 'theme.' + k);
+  // theme defaults = the "timestyle" preset's theme + config.js THEME_DEFAULTS
+  Object.keys(DefaultPreset.theme).forEach(function (k) {
+    assert.strictEqual(protocol.THEME_DEFAULTS[k], DefaultPreset.theme[k], 'theme.' + k);
   });
-  assert.deepStrictEqual(protocol.DEFAULT_LAYOUT, JSON.parse(JSON.stringify(Presets[0].layout)));
-  assert.deepStrictEqual(protocol.DEFAULT_GRID, plain(Presets[0].grid));
+  assert.deepStrictEqual(protocol.DEFAULT_LAYOUT, JSON.parse(JSON.stringify(DefaultPreset.layout)));
+  assert.deepStrictEqual(protocol.DEFAULT_GRID, plain(DefaultPreset.grid));
 });
 
 test('toGColor8 matches the page for the whole palette', function () {
@@ -335,7 +337,7 @@ test('unpacked defaults: page-style config with every option set to default', fu
 
 test('missing fields fall back to page defaults', function () {
   var c = decodeConfig(protocol.encodeConfig({}));
-  var d = decodeConfig(protocol.encodeConfig(tool.presetSettings(Presets[0])));
+  var d = decodeConfig(protocol.encodeConfig(tool.presetSettings(DefaultPreset)));
   assert.deepStrictEqual(c, d);
   // missing opts, theme fields and general fields
   var s = { layout: [{ x: 0, y: 0, w: 4, h: 4, widget: 'steps' }], theme: { bg: '#FFFFFF' }, general: {} };
@@ -369,7 +371,7 @@ test('invalid input is normalized', function () {
   assert.strictEqual(c.theme.lineStyle, 'solid');
   assert.strictEqual(c.weatherInterval, 255);
   assert.strictEqual(c.flags.clock24, false);
-  // overlapping / incomplete layout -> presets[0] layout
+  // overlapping / incomplete layout -> the "timestyle" layout
   var bad = decodeConfig(protocol.encodeConfig({ layout: [{ x: 0, y: 0, w: 2, h: 2, widget: 'time' }] }));
   assert.deepStrictEqual(bad.blocks.map(function (b) { return b.widget; }), ['time', 'weather', 'date', 'steps', 'battery']);
   // JSON string input works too

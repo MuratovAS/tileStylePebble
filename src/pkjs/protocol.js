@@ -23,7 +23,7 @@ var MIN_TRACK = 20;
 
 // --- defaults (duplicated from the settings page) ------------------------
 
-// config.js THEME_DEFAULTS + presets[0].theme
+// config.js THEME_DEFAULTS + the "timestyle" preset's theme
 var THEME_DEFAULTS = {
   bg: '#000000', tile: null, fg: '#FFFFFF', accent: '#FF5500', iconFill: '#FFFFFF',
   gap: 0, radius: 0,
@@ -36,7 +36,7 @@ var GENERAL_DEFAULTS = {
   weatherSource: 'gps', weatherLat: null, weatherLon: null, weatherInterval: 30
 };
 
-// presets[0] ("timestyle"): used when the layout is missing or invalid,
+// the "timestyle" preset (config.js DEFAULT_PRESET): used when the layout is missing or invalid,
 // as the page does. The watch uses the same layout before the first config.
 var ORANGE = { bg: '#FF5500', fg: '#000000', accent: '#000000' };
 function side(y, widget, opts) {
@@ -304,7 +304,7 @@ function encodeConfig(cfg) {
   var t = isObj(cfg.theme) ? cfg.theme : {};
   var g = isObj(cfg.general) ? cfg.general : {};
   var D = THEME_DEFAULTS, G = GENERAL_DEFAULTS;
-  // as the page's loadInitial: no grid -> presets[0] grid, invalid -> even
+  // as the page's loadInitial: no grid -> the "timestyle" grid, invalid -> even
   var grid = cfg.grid ? normalizeGrid(cfg.grid) : DEFAULT_GRID;
 
   var out = [CONFIG_VERSION];

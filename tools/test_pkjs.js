@@ -15,6 +15,9 @@ var ROOT = path.join(__dirname, '..');
 var protocol = require(path.join(ROOT, 'src/pkjs/protocol.js'));
 var tool = require(path.join(__dirname, 'encode_config.js'));
 var Presets = tool.loadPresets();
+function presetByKey(key) { return Presets.filter(function (p) { return p.key === key; })[0]; }
+// the default layout (config.js DEFAULT_PRESET), not necessarily the first one
+var DefaultPreset = presetByKey('timestyle');
 
 // --- fake clock ---------------------------------------------------------------
 
@@ -208,7 +211,7 @@ test('showConfiguration without settings opens the bare page', function () {
 });
 
 test('save -> Config then Weather, one message at a time; reopen passes settings', function () {
-  var s = tool.presetSettings(Presets[0]);
+  var s = tool.presetSettings(DefaultPreset);
   s.general.weatherSource = 'manual';
   s.general.weatherLat = 55.7505;
   s.general.weatherLon = 37.6175;
@@ -229,7 +232,7 @@ test('save -> Config then Weather, one message at a time; reopen passes settings
 });
 
 test('raw (already decoded) JSON response works', function () {
-  var s = tool.presetSettings(Presets[3]); // minimal: no weather widgets
+  var s = tool.presetSettings(presetByKey('minimal')); // no weather widgets
   fire('webviewclosed', { response: JSON.stringify(s) });
   advance(10000);
   assert.deepStrictEqual(sentKeys(), ['Config']);
@@ -248,7 +251,7 @@ test('cancel / empty responses change nothing', function () {
 
 test('NACK is retried, timeouts too, and the queue keeps order', function () {
   env.replies = ['nack', 'silent', 'ack'];
-  var s = tool.presetSettings(Presets[3]);
+  var s = tool.presetSettings(presetByKey('minimal'));
   fire('webviewclosed', { response: encodeURIComponent(JSON.stringify(s)) });
   advance(60000);
   assert.deepStrictEqual(env.sent.map(function (x) { return x.reply; }), ['nack', 'silent', 'ack']);
@@ -257,7 +260,7 @@ test('NACK is retried, timeouts too, and the queue keeps order', function () {
 
 test('gives up after 4 tries and moves on', function () {
   env.replies = ['nack', 'nack', 'nack', 'nack'];
-  var s = tool.presetSettings(Presets[0]);
+  var s = tool.presetSettings(DefaultPreset);
   s.general.weatherSource = 'manual';
   s.general.weatherLat = 1;
   s.general.weatherLon = 2;
@@ -269,9 +272,9 @@ test('gives up after 4 tries and moves on', function () {
 
 test('newer settings replace queued ones', function () {
   env.ackDelay = 2000;
-  var a = tool.presetSettings(Presets[3]);
-  var b = tool.presetSettings(Presets[9]);
-  var c = tool.presetSettings(Presets[10]);
+  var a = tool.presetSettings(presetByKey('minimal'));
+  var b = tool.presetSettings(presetByKey('sport'));
+  var c = tool.presetSettings(presetByKey('contrast'));
   [a, b, c].forEach(function (s) { s.general.weatherSource = 'off'; });
   fire('webviewclosed', { response: encodeURIComponent(JSON.stringify(a)) });
   fire('webviewclosed', { response: encodeURIComponent(JSON.stringify(b)) });
@@ -284,9 +287,9 @@ test('newer settings replace queued ones', function () {
 });
 
 test('layout without weather widgets, or weather off: requests ignored', function () {
-  env.store[SETTINGS_KEY] = JSON.stringify(tool.presetSettings(Presets[3]));
+  env.store[SETTINGS_KEY] = JSON.stringify(tool.presetSettings(presetByKey('minimal')));
   fire('appmessage', { payload: { WeatherRequest: 1 } });
-  var s = tool.presetSettings(Presets[0]);
+  var s = tool.presetSettings(DefaultPreset);
   s.general.weatherSource = 'off';
   advance(5000);
   env.store[SETTINGS_KEY] = JSON.stringify(s);
@@ -296,7 +299,7 @@ test('layout without weather widgets, or weather off: requests ignored', functio
 });
 
 test('manual without coordinates falls back to GPS', function () {
-  var s = tool.presetSettings(Presets[0]);
+  var s = tool.presetSettings(DefaultPreset);
   s.general.weatherSource = 'manual';
   env.store[SETTINGS_KEY] = JSON.stringify(s);
   fire('appmessage', { payload: { WeatherRequest: 1 } });
@@ -350,7 +353,7 @@ test('recent weather is resent from cache, shifted to the current hour', functio
 
 test('fetch failure after saving retries once later', function () {
   env.xhrFail = true;
-  var s = tool.presetSettings(Presets[0]);
+  var s = tool.presetSettings(DefaultPreset);
   fire('webviewclosed', { response: encodeURIComponent(JSON.stringify(s)) });
   advance(5000);
   assert.strictEqual(env.xhr.length, 1);
@@ -410,7 +413,7 @@ test('throwing geolocation does not leave fetching stuck', function () {
 });
 
 test('cache freshness is capped by a short weatherInterval', function () {
-  var s = tool.presetSettings(Presets[0]);
+  var s = tool.presetSettings(DefaultPreset);
   s.general.weatherInterval = 5;
   env.store[SETTINGS_KEY] = JSON.stringify(s);
   request();
