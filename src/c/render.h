@@ -48,7 +48,8 @@ void g_battery(const G *g, double x, double y, int size, GColor color, int level
 // --- shapes ---
 void g_rect(const G *g, double x, double y, double w, double h, GColor color);
 void g_line(const G *g, int x0, int y0, int x1, int y1, GColor color, int width);
-void g_frame(const G *g, double x, double y, double w, double h, GColor color, int lw, int r);
+// fill = GColorClear leaves the inside untouched
+void g_frame(const G *g, double x, double y, double w, double h, GColor color, int lw, int r, GColor fill);
 void fill_round_rect(GContext *ctx, int x, int y, int w, int h, int r, GColor color);
 
 // --- clock digits (fctx) ---

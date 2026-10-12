@@ -195,10 +195,13 @@ static void item_draw(const G *g, const Box *box, const Item *it, int y) {
       draw_battery_icon(g, g_ax(g, it->size), y, it->size, it->color);
       break;
     case ITEM_CALENDAR: {
+      // filled like an icon; on a fill of its own the number takes the icon
+      // stroke color, so it stays readable when the fill matches the text
       int x = g_ax(g, it->bw);
-      g_frame(g, x, y, it->bw, it->h, box->accent, 2, 3);
+      g_frame(g, x, y, it->bw, it->h, box->accent, 2, 3, g->icon_fill);
+      GColor num = gcolor_equal(g->icon_fill, box->bg) ? box->fg : box->accent;
       g_text(g, it->str, x + it->bw / 2.0, y + js_floor((it->h - text_ink_height(it->str, it->dfs, false)) / 2.0),
-             it->dfs, box->fg, false, ALIGN_CENTER);
+             it->dfs, num, false, ALIGN_CENTER);
       break;
     }
   }

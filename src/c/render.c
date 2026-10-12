@@ -156,19 +156,23 @@ void g_icon(const G *g, IconId icon, double x, double y, int size, GColor stroke
 }
 
 // Battery body is an icon; the level is a rectangle inside it
-// (in TimeStyle at 25 px: x 3, y 8, width up to 18, height 8). While
-// charging, TimeStyle's bolt replaces the level.
+// (in TimeStyle at 25 px: x 3, y 8, width up to 18, height 8; other sizes
+// come from the frame bitmaps, BATTERY_LEVEL_BOXES). While charging,
+// TimeStyle's bolt replaces the level.
+static const int8_t BATTERY_LEVEL[ICON_SIZE_COUNT][4] = BATTERY_LEVEL_BOXES;
+
 void g_battery(const G *g, double x, double y, int size, GColor color, int level, bool charging) {
   g_icon(g, ICON_BATTERY_FRAME, x, y, size, color, GColorClear);
   if (charging) {
     g_icon(g, ICON_BATTERY_CHARGE, x, y, size, color, GColorClear);
     return;
   }
-#define U(v) js_round((double)(v) * size / 25)
-  int fw = MAX(1, js_round((double)(U(21) - U(3)) * level / 100));
+  int i = 0;
+  while (i < ICON_SIZE_COUNT - 1 && ICON_SIZE_LIST[i] != size) i++;
+  const int8_t *b = BATTERY_LEVEL[i];
+  int fw = MAX(1, js_round((double)b[2] * level / 100));
   graphics_context_set_fill_color(g->ctx, color);
-  graphics_fill_rect(g->ctx, GRect(js_round(x) + U(3), js_round(y) + U(8), fw, U(16) - U(8)), 0, GCornerNone);
-#undef U
+  graphics_fill_rect(g->ctx, GRect(js_round(x) + b[0], js_round(y) + b[1], fw, b[3]), 0, GCornerNone);
 }
 
 // --- shapes ------------------------------------------------------------------
@@ -224,7 +228,9 @@ void fill_round_rect(GContext *ctx, int x, int y, int w, int h, int r, GColor co
   }
 }
 
-static void stroke_round_rect(GContext *ctx, int x, int y, int w, int h, int r, int lw, GColor color) {
+// fill (unless GColorClear) paints the inside of the frame
+static void stroke_round_rect(GContext *ctx, int x, int y, int w, int h, int r, int lw, GColor color, GColor fill) {
+  bool filled = !gcolor_equal(fill, GColorClear);
   graphics_context_set_fill_color(ctx, color);
   int ri = MAX(0, r - lw);
   for (int j = 0; j < h; j++) {
@@ -237,11 +243,16 @@ static void stroke_round_rect(GContext *ctx, int x, int y, int w, int h, int r, 
     int i = lw + corner_inset(jj, h - lw * 2, ri);
     fill_span(ctx, x + o, y + j, i - o, 1);
     fill_span(ctx, x + w - i, y + j, i - o, 1);
+    if (filled) {
+      graphics_context_set_fill_color(ctx, fill);
+      fill_span(ctx, x + i, y + j, w - i * 2, 1);
+      graphics_context_set_fill_color(ctx, color);
+    }
   }
 }
 
-void g_frame(const G *g, double x, double y, double w, double h, GColor color, int lw, int r) {
-  stroke_round_rect(g->ctx, js_round(x), js_round(y), js_round(w), js_round(h), r, lw, color);
+void g_frame(const G *g, double x, double y, double w, double h, GColor color, int lw, int r, GColor fill) {
+  stroke_round_rect(g->ctx, js_round(x), js_round(y), js_round(w), js_round(h), r, lw, color, fill);
 }
 
 // --- clock -------------------------------------------------------------------

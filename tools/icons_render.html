@@ -37,30 +37,74 @@
   // In Pebble an integer coordinate is a pixel center, while on the canvas
   // the pixel center is x + 0.5, so everything shifts by half a pixel. This way
   // a 2-wide line at coordinate 5.5 lands exactly on pixels 5 and 6.
+  //
+  // At sizes that are not a multiple of the source grid, scaled points land
+  // between pixels and a 2-wide line becomes e.g. 1.44 px, so sides of one
+  // shape come out 1 or 2 px wide. Hence line widths are rounded to whole
+  // pixels and points are snapped to the pixel grid: pixel centers for odd
+  // widths, pixel edges for even ones. Offsets from the image's center are
+  // rounded symmetrically, so symmetric icons stay symmetric.
   function drawPdc(ctx, img, size) {
     var k = size / img.w;
+    // at whole multiples the source grid already matches the pixels
+    var exact = k === Math.round(k);
+    // the center is that of the closed shapes (the battery body without
+    // its tip), or of the image named in img.align (the charging bolt sits
+    // in the battery frame)
+    var ref = img.align || img.commands;
+    var closed = ref.filter(function (c) { return !c.open && !c.hidden; });
+    var lo = [Infinity, Infinity], hi = [-Infinity, -Infinity];
+    (closed.length ? closed : ref).forEach(function (c) {
+      c.points.forEach(function (pt) {
+        for (var a = 0; a < 2; a++) {
+          lo[a] = Math.min(lo[a], pt[a]);
+          hi[a] = Math.max(hi[a], pt[a]);
+        }
+      });
+    });
+    // the center moves to the nearest half pixel: the pixel grid is
+    // symmetric about such a point
+    var mid = [], shift = [];
+    for (var a = 0; a < 2; a++) {
+      var m = (lo[a] + hi[a] + 1) / 2 * k;
+      mid[a] = Math.round(m * 2) / 2;
+      shift[a] = mid[a] - m;
+    }
+
+    // source coordinate -> canvas coordinate on the grid for this width;
+    // a point halfway between two grid lines goes away from the center
+    function snap(v, a, width) {
+      if (exact) return (v + 0.5) * k;
+      var off = width % 2 ? 0.5 : 0;
+      var u = (v + 0.5) * k + shift[a] - off;
+      var f = Math.floor(u);
+      if (Math.abs(u - f - 0.5) < 1e-6) return (u + off < mid[a] ? f : f + 1) + off;
+      return Math.round(u) + off;
+    }
+
     ctx.save();
-    ctx.scale(k, k);
-    ctx.translate(0.5, 0.5);
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     img.commands.forEach(function (c) {
       if (c.hidden) return;
+      var width = c.stroke_width * k;
+      if (!exact && width) width = Math.max(1, Math.round(width));
       var p = new Path2D();
       if (c.type === 2) {
-        p.arc(c.points[0][0], c.points[0][1], c.radius, 0, Math.PI * 2);
+        var r = exact ? c.radius * k : Math.round(c.radius * k);
+        p.arc(snap(c.points[0][0], 0, width), snap(c.points[0][1], 1, width), r, 0, Math.PI * 2);
       } else {
         c.points.forEach(function (pt, i) {
-          if (i) p.lineTo(pt[0], pt[1]); else p.moveTo(pt[0], pt[1]);
+          var x = snap(pt[0], 0, width), y = snap(pt[1], 1, width);
+          if (i) p.lineTo(x, y); else p.moveTo(x, y);
         });
         if (!c.open) p.closePath();
       }
       ctx.fillStyle = img.swap ? STROKE : FILL;
       ctx.fill(p);
-      if (c.stroke_width > 0) {
+      if (width) {
         ctx.strokeStyle = img.swap ? FILL : STROKE;
-        // at small sizes, keep lines at least one pixel wide
-        ctx.lineWidth = Math.max(c.stroke_width, 1 / k);
+        ctx.lineWidth = width;
         ctx.stroke(p);
       }
     });
