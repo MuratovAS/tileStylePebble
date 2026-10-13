@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title data-i18n>TileStyle — settings</title>
+  <link rel="stylesheet" href="css/config.css">
+</head>
+<body>
+
+<header class="topbar">
+  <button type="button" class="btn btn-ghost" id="cancelBtn" data-i18n>Cancel</button>
+  <div class="brand">
+    <h1>TileStyle</h1>
+    <div class="lang-switch" id="langSwitch" role="group" aria-label="Language" data-i18n-aria-label>
+      <button type="button" data-lang="en" lang="en">EN</button>
+      <button type="button" data-lang="ru" lang="ru">RU</button>
+    </div>
+  </div>
+  <button type="button" class="btn btn-primary" id="saveBtn" data-i18n>Save</button>
+</header>
+
+<main class="layout">
+
+  <section class="stage">
+    <div class="watch">
+      <div class="screen-area">
+        <div class="screen-wrap" id="screenWrap">
+          <canvas class="screen" id="screen" width="200" height="228"></canvas>
+          <div class="overlay" id="overlay" aria-label="Blocks" data-i18n-aria-label></div>
+        </div>
+        <div class="handles" id="handles"></div>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <button type="button" class="btn btn-accent" id="mergeBtn" data-i18n>Merge</button>
+      <button type="button" class="btn" id="splitVBtn" title="Split left and right" data-i18n-title>◫ <span data-i18n>Split</span></button>
+      <button type="button" class="btn" id="splitHBtn" title="Split top and bottom" data-i18n-title>⊟ <span data-i18n>Split</span></button>
+      <label class="chip-toggle"><input type="checkbox" id="gridToggle" checked> <span data-i18n>Grid</span></label>
+      <button type="button" class="btn" id="undoBtn" title="Undo" data-i18n-title>↶ <span data-i18n>Undo</span></button>
+    </div>
+    <p class="hint" data-i18n>Tap a block to choose its widget. Drag across several blocks to select and merge them.
+      Drag the handles on the borders to resize blocks: a border moves only between the blocks along it.</p>
+    <ul class="warnings" id="warnings"></ul>
+  </section>
+
+  <div class="panels">
+
+    <section class="panel">
+      <h2 data-i18n>Layouts</h2>
+      <div class="presets" id="presets"></div>
+
+      <div class="mine-head">
+        <h3 data-i18n>My layouts</h3>
+        <button type="button" class="btn" id="savePresetBtn" data-i18n>Save current</button>
+      </div>
+      <form class="save-form" id="savePresetForm" hidden>
+        <input type="text" id="presetName" maxlength="30" placeholder="Name" data-i18n-placeholder autocomplete="off">
+        <button type="submit" class="btn btn-accent" data-i18n>Save</button>
+        <button type="button" class="btn btn-ghost" id="savePresetCancel" data-i18n>Cancel</button>
+      </form>
+      <p class="muted small-note" id="userPresetsNote"></p>
+      <div class="presets" id="userPresets"></div>
+    </section>
+
+    <section class="panel" id="inspector"></section>
+
+    <section class="panel">
+      <h2 data-i18n>Theme</h2>
+      <div class="field">
+        <span data-i18n>Screen background</span>
+        <button type="button" class="swatch" data-color="theme.bg"></button>
+      </div>
+      <div class="field">
+        <span data-i18n>Block background</span>
+        <button type="button" class="swatch" data-color="theme.tile" data-inherit="Same as screen" data-i18n-data-inherit></button>
+      </div>
+      <div class="field">
+        <span data-i18n>Text</span>
+        <button type="button" class="swatch" data-color="theme.fg"></button>
+      </div>
+      <div class="field">
+        <span data-i18n>Accent (icon outline)</span>
+        <button type="button" class="swatch" data-color="theme.accent"></button>
+      </div>
+      <div class="field">
+        <span data-i18n>Icon fill</span>
+        <button type="button" class="swatch" data-color="theme.iconFill" data-inherit="Same as block" data-i18n-data-inherit></button>
+      </div>
+      <div class="field">
+        <span data-i18n>Text font</span>
+        <select id="fontSelect" data-bind="theme.font">
+          <option value="gothic" data-i18n>Gothic (system)</option>
+        </select>
+      </div>
+      <div class="field">
+        <span data-i18n>Labels in blocks (steps, bpm…)</span>
+        <label class="switch"><input type="checkbox" data-bind="theme.labels"><i></i></label>
+      </div>
+      <div class="field">
+        <span data-i18n>Gap between blocks</span>
+        <div class="seg" data-bind="theme.gap">
+          <button type="button" data-v="0">0</button>
+          <button type="button" data-v="2">2</button>
+          <button type="button" data-v="4">4</button>
+          <button type="button" data-v="6">6</button>
+        </div>
+      </div>
+      <div class="field">
+        <span data-i18n>Corner radius</span>
+        <div class="seg" data-bind="theme.radius">
+          <button type="button" data-v="0">0</button>
+          <button type="button" data-v="4">4</button>
+          <button type="button" data-v="8">8</button>
+          <button type="button" data-v="12">12</button>
+        </div>
+      </div>
+      <div class="field">
+        <span data-i18n>Lines between blocks</span>
+        <label class="switch"><input type="checkbox" data-bind="theme.lineOn"><i></i></label>
+      </div>
+      <div id="lineOpts">
+        <div class="field">
+          <span data-i18n>Line color</span>
+          <button type="button" class="swatch" data-color="theme.lineColor"></button>
+        </div>
+        <div class="field">
+          <span data-i18n>Thickness</span>
+          <div class="seg" data-bind="theme.lineWidth">
+            <button type="button" data-v="1">1</button>
+            <button type="button" data-v="2">2</button>
+            <button type="button" data-v="3">3</button>
+          </div>
+        </div>
+        <div class="field">
+          <span data-i18n>Line style</span>
+          <div class="seg" data-bind="theme.lineStyle">
+            <button type="button" data-v="solid" data-i18n>Solid</button>
+            <button type="button" data-v="dashed" data-i18n>Dashed</button>
+            <button type="button" data-v="dotted" data-i18n>Dotted</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2 data-i18n>General</h2>
+      <div class="field">
+        <span data-i18n>Time format</span>
+        <div class="seg" data-bind="general.clock24">
+          <button type="button" data-v="true" data-i18n>24 h</button>
+          <button type="button" data-v="false" data-i18n>12 h</button>
+        </div>
+      </div>
+      <div class="field">
+        <span data-i18n>Units</span>
+        <div class="seg" data-bind="general.metric">
+          <button type="button" data-v="true" data-i18n>°C, km</button>
+          <button type="button" data-v="false" data-i18n>°F, mi</button>
+        </div>
+      </div>
+      <div class="field">
+        <span data-i18n>Vibrate on Bluetooth disconnect</span>
+        <label class="switch"><input type="checkbox" data-bind="general.btVibe"><i></i></label>
+      </div>
+
+      <h3 data-i18n>Weather</h3>
+      <div class="field">
+        <span data-i18n>Location</span>
+        <div class="seg" data-bind="general.weatherSource">
+          <button type="button" data-v="gps">GPS</button>
+          <button type="button" data-v="manual" data-i18n>Manual</button>
+          <button type="button" data-v="off" data-i18n>Off</button>
+        </div>
+      </div>
+      <div class="field field-col" id="weatherLocField">
+        <span data-i18n>City</span>
+        <div class="suggest-wrap">
+          <input type="text" id="weatherLoc" placeholder="Start typing a place name…" data-i18n-placeholder maxlength="200"
+                 autocomplete="off" role="combobox" aria-autocomplete="list" aria-controls="weatherSuggest" aria-expanded="false">
+          <div class="suggest" id="weatherSuggest" role="listbox" hidden></div>
+        </div>
+        <small class="muted" id="weatherCoords"></small>
+      </div>
+      <div class="field">
+        <span data-i18n>Update</span>
+        <select data-bind="general.weatherInterval">
+          <option value="30" data-i18n>Every 30 min</option>
+          <option value="60" data-i18n>Every hour</option>
+          <option value="120" data-i18n>Every 2 hours</option>
+        </select>
+      </div>
+    </section>
+
+    <details class="panel dev">
+      <summary data-i18n>For developers: settings JSON</summary>
+      <pre id="jsonOut"></pre>
+    </details>
+
+  </div>
+</main>
+
+<div class="sheet" id="widgetSheet" hidden>
+  <div class="sheet-backdrop" data-close></div>
+  <div class="sheet-body sheet-tall" role="dialog" aria-label="Choose a widget" data-i18n-aria-label>
+    <div class="sheet-head">
+      <strong id="widgetSheetTitle">Widget</strong>
+      <button type="button" class="btn btn-ghost" data-close data-i18n>Close</button>
+    </div>
+    <div id="widgetPicker"></div>
+  </div>
+</div>
+
+<div class="sheet" id="colorSheet" hidden>
+  <div class="sheet-backdrop" data-close></div>
+  <div class="sheet-body" role="dialog" aria-label="Choose a color" data-i18n-aria-label>
+    <div class="sheet-head">
+      <strong id="colorSheetTitle" data-i18n>Color</strong>
+      <button type="button" class="btn btn-ghost" data-close data-i18n>Done</button>
+    </div>
+    <button type="button" class="btn inherit-btn" id="colorInherit">Same as theme</button>
+    <div class="palette" id="palette"></div>
+  </div>
+</div>
+
+<script src="js/i18n.js"></script>
+<script src="js/layout.js"></script>
+<script src="js/fonts.js"></script>
+<script src="js/sysfonts.js"></script>
+<script src="js/textfonts/index.js"></script>
+<script src="js/icons.js"></script>
+<script src="js/widgets.js"></script>
+<script src="js/raster.js"></script>
+<script src="js/presets.js"></script>
+<script src="js/config.js"></script>
+</body>
+</html>
