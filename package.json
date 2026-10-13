@@ -33,6 +33,12 @@
     "resources": {
       "media": [
         {
+          "type": "bitmap",
+          "name": "APP_ICON",
+          "file": "app_icon.png",
+          "menuIcon": true
+        },
+        {
           "file": "fonts/AvenirNextRegular.ffont",
           "name": "AVENIR_REGULAR_FFONT",
           "type": "raw"

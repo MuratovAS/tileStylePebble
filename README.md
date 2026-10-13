@@ -171,6 +171,8 @@ Don't edit these by hand; regenerate them:
 
 | File | Command | Source |
 |---|---|---|
+| `resources/app_icon.png` (the menu icon, 25×25), `screenshots/icon_small.png` and `icon_large.png` (app store, 80×80 and 144×144) | `python3 tools/app_icon.py` | the pixel map in `tools/app_icon.py` |
+| `screenshots/emery_*.png` (app store screenshots) | `python3 tools/screenshots.py [preset ...]` | built-in layouts on the emulator, with demo data at 10:10 |
 | `resources/icons/*.png` | `python3 tools/icons.py render` | `resources/icons_src/`, vectors in `widgets.js` |
 | `config/js/icons.js` | `python3 tools/icons.py js` | `resources/icons/*.png` |
 | `package.json` (icons), `src/c/gen_icons.h` | `python3 tools/icons.py resources` | `resources/icons/*.png` |
@@ -181,6 +183,16 @@ Don't edit these by hand; regenerate them:
 
 `icons.py render` and `gen_tables.py` need a headless Chromium: `chromium` on
 `PATH`, the Playwright browser, or a path in the `CHROME` variable.
+
+`screenshots.py` needs a running emery emulator (`pebble install --emulator
+emery` starts one); it builds with `DEMO=1` and then builds the normal
+watchface again.
+
+The app store listing (the [Core Devices](https://apps.repebble.com) store)
+takes its preview from the screenshots and icons above, not from the `.pbw`:
+
+    pebble publish --screenshots screenshots/emery_*.png \
+        --icon-small screenshots/icon_small.png --icon-large screenshots/icon_large.png
 
 Icons are two-color, as in TimeStyle: a PNG with a palette of transparent,
 white (fill) and black (outline). The watch recolors them by swapping palette
