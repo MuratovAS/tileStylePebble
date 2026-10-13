@@ -20,11 +20,9 @@
     14: ['GOTHIC_14', 'GOTHIC_14_BOLD'],
     18: ['GOTHIC_18', 'GOTHIC_18_BOLD'],
     24: ['GOTHIC_24', 'GOTHIC_24_BOLD'],
-    28: ['GOTHIC_28', 'GOTHIC_28_BOLD'],
-    30: ['BITHAM_30_BLACK', 'BITHAM_30_BLACK'],
-    42: ['BITHAM_42_BOLD', 'BITHAM_42_BOLD']
+    28: ['GOTHIC_28', 'GOTHIC_28_BOLD']
   };
-  var TEXT_SIZES = [14, 18, 24, 28, 30, 42];
+  var TEXT_SIZES = [14, 18, 24, 28];
 
   // --- palette ---------------------------------------------------------
 
@@ -97,15 +95,48 @@
 
   var glyphCache = {};
 
+  // Text font family of the screen being drawn: 'gothic' (firmware fonts)
+  // or a family of config/js/textfonts, the app fonts of the watch in the
+  // same sizes (tools/textfonts.py). A family's script is loaded on demand.
+  var family = 'gothic';
+  var familyLoading = {};
+
+  function familyFonts(key) {
+    return key !== 'gothic' && root.PebbleTextFonts && root.PebbleTextFonts[key];
+  }
+
+  // Loads a candidate family's script once, then calls done
+  function loadFamily(key, done) {
+    if (familyLoading[key]) {
+      familyLoading[key].push(done);
+      return;
+    }
+    familyLoading[key] = [done];
+    var el = document.createElement('script');
+    el.src = 'js/textfonts/' + key + '.js';
+    el.onload = function () {
+      familyLoading[key].forEach(function (fn) { fn(); });
+      familyLoading[key] = [];
+    };
+    el.onerror = function () { console.error('Text font not found', key); };
+    document.head.appendChild(el);
+  }
+
   function fontKey(size, bold) {
-    var pair = TEXT_FONTS[size] || TEXT_FONTS[14];
-    return pair[bold ? 1 : 0];
+    if (!TEXT_FONTS[size]) size = 14;
+    if (familyFonts(family)) return family + ':' + size + (bold ? 'b' : '');
+    return TEXT_FONTS[size][bold ? 1 : 0];
+  }
+
+  function fontData(key) {
+    var i = key.indexOf(':');
+    return i < 0 ? root.PebbleSysFonts[key] : root.PebbleTextFonts[key.slice(0, i)][key.slice(i + 1)];
   }
 
   function glyph(key, ch) {
     var ck = key + ':' + ch;
     if (ck in glyphCache) return glyphCache[ck];
-    var font = root.PebbleSysFonts[key];
+    var font = fontData(key);
     var raw = font.glyphs[ch] || font.glyphs[font.wildcard];
     var g = null;
     if (raw) {
@@ -116,7 +147,7 @@
   }
 
   function covers(key, str) {
-    var glyphs = root.PebbleSysFonts[key].glyphs;
+    var glyphs = fontData(key).glyphs;
     for (var i = 0; i < str.length; i++) {
       if (!glyphs[str.charAt(i)]) return false;
     }
@@ -440,8 +471,6 @@
         var best = TEXT_SIZES[0];
         for (var i = 0; i < TEXT_SIZES.length; i++) {
           var s = TEXT_SIZES[i];
-          // Bitham has no regular face; regular text stays in Gothic
-          if (!bold && fontKey(s, false) === fontKey(s, true)) continue;
           if (!covers(fontKey(s, bold), str)) continue;
           if (ink(str, s, bold).h <= maxH && measure(str, s, bold) <= maxW) best = s;
         }
@@ -523,6 +552,21 @@
 
   // s = {blocks, grid, theme, general, now}
   function drawScreen(canvas, s) {
+    var font = s.theme.font || 'gothic';
+    if (font !== 'gothic' && !familyFonts(font)) {
+      // Gothic until the family is loaded, then the screen is drawn again
+      loadFamily(font, function () { drawScreen(canvas, s); });
+      font = 'gothic';
+    }
+    family = font;
+    try {
+      drawBlocks(canvas, s);
+    } finally {
+      family = 'gothic';
+    }
+  }
+
+  function drawBlocks(canvas, s) {
     var W = root.Widgets;
     var ctx = canvas.getContext('2d', { willReadFrequently: true });
     var now = s.now || new Date();

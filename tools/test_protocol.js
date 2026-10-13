@@ -27,6 +27,8 @@ function loadPage(file, name) {
   return sb[name];
 }
 var Widgets = loadPage('widgets.js', 'Widgets');
+// theme text fonts as the page lists them: Gothic, then tools/textfonts.py's families
+var TEXT_FONTS = ['gothic'].concat(loadPage('textfonts/index.js', 'PebbleTextFamilies').map(function (f) { return f[0]; }));
 var Presets = tool.loadPresets();
 // the default layout (config.js DEFAULT_PRESET), not necessarily the first one
 var DefaultPreset = Presets.filter(function (p) { return p.key === 'timestyle'; })[0];
@@ -119,6 +121,7 @@ function decodeConfig(bytes) {
     gap: r.u8(), radius: r.u8(), lineWidth: r.u8(), lineColor: r.u8(), lineStyle: LINE[r.u8()]
   };
   c.weatherInterval = r.u8();
+  c.theme.font = TEXT_FONTS[r.u8()];
   var n = r.u8();
   assert(n >= 1 && n <= 16, 'block count ' + n);
   c.blocks = [];
@@ -192,12 +195,13 @@ function expectedOpts(key, rawOpts) {
 function checkConfig(settings, label) {
   var c = decodeConfig(protocol.encodeConfig(settings));
   var t = settings.theme, g = settings.general;
-  assert.strictEqual(c.version, 2);
+  assert.strictEqual(c.version, 3);
   assert.deepStrictEqual(c.flags, { clock24: g.clock24, metric: g.metric, btVibe: g.btVibe, lineOn: !!t.lineOn }, label);
   assert.deepStrictEqual(c.grid, settings.grid, label);
   assert.deepStrictEqual(c.theme, {
     bg: col(t.bg), tile: col(t.tile), fg: col(t.fg), accent: col(t.accent), iconFill: col(t.iconFill),
-    gap: t.gap, radius: t.radius, lineWidth: t.lineWidth, lineColor: col(t.lineColor), lineStyle: t.lineStyle
+    gap: t.gap, radius: t.radius, lineWidth: t.lineWidth, lineColor: col(t.lineColor), lineStyle: t.lineStyle,
+    font: t.font || 'gothic'
   }, label);
   assert.strictEqual(c.weatherInterval, g.weatherSource === 'off' ? 0 : g.weatherInterval, label);
   var layout = settings.layout.slice().sort(function (a, b) { return a.y - b.y || a.x - b.x; });
@@ -251,6 +255,15 @@ test('tables match widgets.js', function () {
   assert.deepStrictEqual(protocol.DEFAULT_GRID, plain(DefaultPreset.grid));
 });
 
+test('text font tables match the page and the watch', function () {
+  assert.deepStrictEqual(protocol.TEXT_FONTS, TEXT_FONTS);
+  var h = fs.readFileSync(path.join(ROOT, 'src/c/gen_textfonts.h'), 'utf8');
+  assert.strictEqual(Number(/TEXT_FAMILY_COUNT (\d+)/.exec(h)[1]), TEXT_FONTS.length);
+  var rows = h.split('\n').filter(function (l) { return /^  \{RESOURCE_ID_TEXT_/.test(l); });
+  assert.deepStrictEqual(rows.map(function (l) { return /RESOURCE_ID_TEXT_(\w+?)_14,/.exec(l)[1].toLowerCase(); }),
+    TEXT_FONTS.slice(1));
+});
+
 test('toGColor8 matches the page for the whole palette', function () {
   Widgets.PALETTE.concat(['#123456', '#FFFFFF', '#000000', '#7F8081']).forEach(function (hex) {
     assert.strictEqual(protocol.toGColor8(hex), Widgets.toGColor8(hex), hex);
@@ -301,7 +314,7 @@ function syntheticSettings() {
       return b;
     }),
     theme: { bg: '#550055', tile: '#AAAAAA', fg: '#FFFF00', accent: '#00FFAA', iconFill: null, gap: 6, radius: 12,
-      lineOn: true, lineWidth: 3, lineColor: '#5555AA', lineStyle: 'dashed' },
+      lineOn: true, lineWidth: 3, lineColor: '#5555AA', lineStyle: 'dashed', font: 'barlow_condensed' },
     general: { clock24: false, metric: false, btVibe: false, weatherSource: 'manual', weatherLocation: 'X',
       weatherLat: 1.5, weatherLon: 2.5, weatherInterval: 120 }
   };
@@ -356,7 +369,7 @@ test('invalid input is normalized', function () {
   var s = {
     grid: { cols: [10, 90, 50, 50], rows: [57, 57, 57] },
     layout: [{ x: 0, y: 0, w: 4, h: 4, widget: 'nope', opts: { align: 'left' }, bg: 'red', fg: '#12345' }],
-    theme: { bg: null, tile: 'x', gap: 999, radius: -5, lineWidth: 0, lineStyle: 'wavy', fg: '#abcdef' },
+    theme: { bg: null, tile: 'x', gap: 999, radius: -5, lineWidth: 0, lineStyle: 'wavy', fg: '#abcdef', font: 'comic' },
     general: { weatherInterval: 1000, clock24: 'false' }
   };
   var c = decodeConfig(protocol.encodeConfig(s));
@@ -369,6 +382,7 @@ test('invalid input is normalized', function () {
   assert.strictEqual(c.theme.fg, Widgets.toGColor8('#abcdef'));
   assert(c.theme.gap <= 40 && c.theme.radius === 0 && c.theme.lineWidth === 1);
   assert.strictEqual(c.theme.lineStyle, 'solid');
+  assert.strictEqual(c.theme.font, 'gothic');
   assert.strictEqual(c.weatherInterval, 255);
   assert.strictEqual(c.flags.clock24, false);
   // overlapping / incomplete layout -> the "timestyle" layout

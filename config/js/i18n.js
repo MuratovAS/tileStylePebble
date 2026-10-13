@@ -53,6 +53,8 @@
       'Accent (icon outline)': 'Акцент (обводка иконок)',
       'Icon fill': 'Заливка иконок',
       'Same as block': 'Как фон блока',
+      'Text font': 'Шрифт текста',
+      'Gothic (system)': 'Gothic (системный)',
       'Gap between blocks': 'Отступ между блоками',
       'Corner radius': 'Скругление углов',
       'Lines between blocks': 'Линии между блоками',

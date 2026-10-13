@@ -20,6 +20,7 @@ static const uint8_t DEFAULT_BLOB[] = {
   0, 0,                    // gap, radius
   1, 0xFF, 0,              // lineWidth, lineColor, lineStyle
   30,                      // weatherInterval
+  0,                       // text font: Gothic
   5,                       // blocks
   // time: avenir, stack, zero
   0, 0, 3, 4, WIDGET_TIME, 0, 0, 0, 0, ALIGN_CENTER, 3, 0, 2, 0x01,
@@ -73,9 +74,12 @@ static void parse_opts(BlockConfig *b, const uint8_t *p, int len) {
 }
 
 static bool parse(Settings *s, const uint8_t *d, int len) {
-  if (len < 22 || (d[0] != CONFIG_VERSION && d[0] != 1)) return false;
-  // version 1 (stored by earlier releases): blocks have no iconFill byte
+  if (len < 22 || d[0] < 1 || d[0] > CONFIG_VERSION) return false;
+  // versions 1 and 2 (stored by earlier releases): no text font byte;
+  // in version 1 blocks have no iconFill byte
   int head = d[0] == 1 ? 10 : 11;
+  int base = d[0] >= 3 ? 22 : 21;  // block count
+  if (len < base + 1) return false;
   memset(s, 0, sizeof(*s));
   s->clock24 = d[1] & 1;
   s->metric = (d[1] >> 1) & 1;
@@ -101,14 +105,15 @@ static bool parse(Settings *s, const uint8_t *d, int len) {
   s->line_color = d[18];
   s->line_style = d[19] <= LINE_DOTTED ? d[19] : LINE_SOLID;
   s->weather_interval = d[20];
-  s->count = d[21];
+  s->text_font = base == 22 ? d[21] : 0;  // unknown families draw Gothic (render.c)
+  s->count = d[base];
   if (!s->bg) s->bg = GColorBlackARGB8;
   if (!s->fg) s->fg = GColorWhiteARGB8;
   if (!s->accent) s->accent = s->fg;
   if (s->count < 1 || s->count > CONFIG_MAX_BLOCKS) return false;
 
   uint16_t covered = 0;
-  int off = 22;
+  int off = base + 1;
   for (int i = 0; i < s->count; i++) {
     if (off + head > len) return false;
     BlockConfig *b = &s->blocks[i];

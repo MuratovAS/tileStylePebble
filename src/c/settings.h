@@ -35,6 +35,7 @@ typedef struct {
   uint8_t gap, radius;
   uint8_t line_width, line_color, line_style;
   uint8_t weather_interval;  // minutes
+  uint8_t text_font;         // 0 Gothic, 1.. tools/textfonts.py families
   uint8_t count;
   BlockConfig blocks[CONFIG_MAX_BLOCKS];
 } Settings;

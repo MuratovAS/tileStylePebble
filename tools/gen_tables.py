@@ -26,7 +26,7 @@ OUT = os.path.join(ROOT, 'src', 'c', 'gen_tables.c')
 
 # order must match SysFont in src/c/fonts.h
 SYSFONTS = ['GOTHIC_14', 'GOTHIC_14_BOLD', 'GOTHIC_18', 'GOTHIC_18_BOLD', 'GOTHIC_24', 'GOTHIC_24_BOLD',
-            'GOTHIC_28', 'GOTHIC_28_BOLD', 'BITHAM_30_BLACK', 'BITHAM_42_BOLD']
+            'GOTHIC_28', 'GOTHIC_28_BOLD']
 FIRST, LAST = 0x20, 0xFF
 CLOCK_FONTS = ['avenir', 'bold', 'leco']
 CLOCK_CHARS = '0123456789:'

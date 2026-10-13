@@ -33,14 +33,17 @@ fonts and icons.
 - **Styling:**
   - theme colors, plus per-block overrides;
   - gaps and rounded corners between blocks;
-  - lines between blocks: solid, dashed or dotted.
+  - lines between blocks: solid, dashed or dotted;
+  - text font: the firmware's Gothic or one of nine bitmap families (Roboto,
+    Roboto Condensed, Fira Sans, Ubuntu, Barlow, Barlow Condensed, Lato,
+    PT Sans, IBM Plex Sans Condensed); the clock has its own font choice.
 - **12 built-in layouts**, plus your own layouts saved on the phone.
 - **Weather** from [Open-Meteo](https://open-meteo.com/), no API key needed.
   The location comes from GPS or is picked by hand.
 - **Pixel-exact preview.** The settings page draws the screen exactly as the
-  watch does: same firmware fonts, icons and layout.
+  watch does: same fonts, icons and layout.
 
-On-watch labels are in English: the firmware fonts have no Cyrillic.
+On-watch labels are in English: the text fonts have no Cyrillic.
 
 ## Usage
 
@@ -103,7 +106,7 @@ phone code (`build/js/build_info.json`):
 | `src/c/` | watch code: one layer per block, widgets, drawing, data (Health, battery, Bluetooth, weather), settings storage |
 | `src/c/protocol.h` | phone ↔ watch protocol: message keys, binary settings and weather formats, widget ids |
 | `src/pkjs/` | phone code: opens the settings page, encodes settings into the binary format, fetches weather from Open-Meteo, queues messages |
-| `resources/` | clock digit fonts (`.ffont`) and icons in 14/18/25/36/50 px, with their sources |
+| `resources/` | clock digit fonts (`.ffont`), text fonts (`fonts/text/*.pbf`) and icons in 14/18/25/36/50 px, with their sources |
 | `tools/` | resource and table generators, tests, sending settings to the emulator |
 | `config/` | the settings page: static HTML with no build step; the UI is in English and Russian (`js/i18n.js`: `?lang=en\|ru`, then the EN / RU switch, else the browser language) |
 
@@ -171,6 +174,7 @@ Don't edit these by hand; regenerate them:
 | `src/c/gen_tables.c` | `python3 tools/gen_tables.py` | `config/js/sysfonts.js`, `config/js/fonts.js` |
 | `config/js/sysfonts.js` | `python3 tools/pbf2js.py <PebbleOS>/resources > config/js/sysfonts.js` | firmware fonts from [PebbleOS](https://github.com/coredevices/PebbleOS) |
 | `config/js/fonts.js` | `python3 tools/ffont2js.py resources/fonts > config/js/fonts.js` | `resources/fonts/*.ffont` |
+| `resources/fonts/text/*.pbf`, `config/js/textfonts/*.js`, `package.json` (text fonts), `src/c/gen_textfonts.h` | `~/.local/share/uv/tools/pebble-tool/bin/python tools/textfonts.py <ttf cache dir>` | TTFs listed in `tools/textfonts.py` (downloaded), rendered by the SDK's `fontgen.py` |
 
 `icons.py render` and `gen_tables.py` need a headless Chromium: `chromium` on
 `PATH`, the Playwright browser, or a path in the `CHROME` variable.
@@ -196,7 +200,8 @@ compact binary blob described in `src/c/protocol.h`.
       "bg": "#FF5500", "fg": "#000000", "accent": "#000000", "opts": { "align": "center" } }
   ],
   "theme": { "bg": "#000000", "tile": null, "fg": "#FFFFFF", "accent": "#FF5500", "iconFill": "#FFFFFF",
-             "gap": 0, "radius": 0, "lineOn": false, "lineWidth": 1, "lineColor": "#FFFFFF", "lineStyle": "solid" },
+             "gap": 0, "radius": 0, "lineOn": false, "lineWidth": 1, "lineColor": "#FFFFFF", "lineStyle": "solid",
+             "font": "gothic" },
   "general": { "clock24": true, "metric": true, "btVibe": true,
                "weatherSource": "manual", "weatherLocation": "Moscow, Russia",
                "weatherLat": 55.7505, "weatherLon": 37.6175, "weatherInterval": 30 }
@@ -225,4 +230,11 @@ JSON in the hash.
   clock digit fonts, and the approach to weather and the settings page.
 - [pebble-fctx](https://github.com/jrmobley/pebble-fctx): vector clock
   digits.
+- Text fonts, rendered to bitmaps: [Roboto](https://github.com/googlefonts/roboto-2)
+  and Roboto Condensed (Apache-2.0); [Fira Sans](https://fonts.google.com/specimen/Fira+Sans),
+  [Barlow](https://fonts.google.com/specimen/Barlow), Barlow Condensed,
+  [Lato](https://fonts.google.com/specimen/Lato), [PT Sans](https://fonts.google.com/specimen/PT+Sans) and
+  [IBM Plex Sans Condensed](https://fonts.google.com/specimen/IBM+Plex+Sans+Condensed)
+  (SIL Open Font License 1.1); [Ubuntu](https://fonts.google.com/specimen/Ubuntu)
+  (Ubuntu Font Licence 1.0).
 - [Open-Meteo](https://open-meteo.com/): weather data.

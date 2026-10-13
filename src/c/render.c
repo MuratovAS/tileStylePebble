@@ -1,32 +1,146 @@
 #include "render.h"
 #include "fonts.h"
+#include "gen_textfonts.h"
 #include "util.h"
 
-const int TEXT_SIZES[TEXT_SIZE_COUNT] = {14, 18, 24, 28, 30, 42};
+const int TEXT_SIZES[TEXT_SIZE_COUNT] = {14, 18, 24, 28};
 
 // --- text --------------------------------------------------------------------
 
 static const char *const FONT_KEYS[SYSFONT_COUNT] = {
   FONT_KEY_GOTHIC_14, FONT_KEY_GOTHIC_14_BOLD, FONT_KEY_GOTHIC_18, FONT_KEY_GOTHIC_18_BOLD,
   FONT_KEY_GOTHIC_24, FONT_KEY_GOTHIC_24_BOLD, FONT_KEY_GOTHIC_28, FONT_KEY_GOTHIC_28_BOLD,
-  FONT_KEY_BITHAM_30_BLACK, FONT_KEY_BITHAM_42_BOLD,
 };
 
 // Where graphics_draw_text puts a glyph relative to the text box origin,
 // compared to the .pbf glyph offsets the preview uses (calibrated in the
 // emulator): box = (line left + TEXT_DX, line top + TEXT_DY)
-static const int8_t TEXT_DX[SYSFONT_COUNT] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-static const int8_t TEXT_DY[SYSFONT_COUNT] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+static const int8_t TEXT_DX[SYSFONT_COUNT] = {0, 0, 0, 0, 0, 0, 0, 0};
+static const int8_t TEXT_DY[SYSFONT_COUNT] = {0, 0, 0, 0, 0, 0, 0, 0};
 
 static GFont s_fonts[SYSFONT_COUNT];
 
+// --- theme text font -----------------------------------------------------------
+//
+// Family 0 is the firmware's Gothic; the others are app resources in the
+// same sizes (tools/textfonts.py). The watch has no API for ink bounds, so a
+// family's glyph metrics are read from its .pbf resources, in the format of
+// tools/pbf.py, when it is first used.
+
+static const uint32_t TEXT_FONT_RESOURCES[TEXT_FAMILY_COUNT - 1][SYSFONT_COUNT] = TEXT_FONT_RESOURCE_TABLE;
+
+#define PBF_FEATURE_OFFSET_16 0x01
+#define PBF_FEATURE_RLE4 0x02
+
+typedef struct {
+  GlyphMetric glyphs[GLYPH_LAST - GLYPH_FIRST + 1];
+  GlyphMetric wildcard;
+} FaceMetrics;
+
+static uint8_t s_family;               // the family loaded below, 0 = Gothic
+static FaceMetrics *s_family_metrics;  // [SYSFONT_COUNT]
+static GFont s_family_fonts[SYSFONT_COUNT];
+
+static uint32_t read_le(const uint8_t *p, int n) {
+  uint32_t v = 0;
+  for (int i = n - 1; i >= 0; i--) v = v << 8 | p[i];
+  return v;
+}
+
+// Glyph metrics of a version 3 .pbf (as fontgen.py writes it, uncompressed)
+static bool parse_face(const uint8_t *d, size_t size, FaceMetrics *m) {
+  const size_t md_size = 10;
+  if (size < md_size || d[0] != 3) return false;
+  int num_glyphs = read_le(d + 2, 2), table_size = d[6], cp_bytes = d[7], features = d[9];
+  if (features & PBF_FEATURE_RLE4) return false;
+  int off_bytes = features & PBF_FEATURE_OFFSET_16 ? 2 : 4;
+  int entry = cp_bytes + off_bytes;
+  size_t offsets = md_size + 4 * table_size, glyph_table = offsets + (size_t)entry * num_glyphs;
+  if (glyph_table > size) return false;
+
+  for (int i = 0; i <= GLYPH_LAST - GLYPH_FIRST; i++) m->glyphs[i] = (GlyphMetric){0, GLYPH_MISSING, 0};
+  m->wildcard = (GlyphMetric){0, 0, 0};
+  for (int t = 0; t < table_size; t++) {
+    const uint8_t *bucket = d + md_size + 4 * t;
+    int count = bucket[1];
+    size_t off = offsets + read_le(bucket + 2, 2);
+    for (int i = 0; i < count; i++, off += entry) {
+      if (off + entry > glyph_table) return false;
+      uint32_t cp = read_le(d + off, cp_bytes);
+      size_t p = glyph_table + read_le(d + off + cp_bytes, off_bytes);
+      if (p + 5 > size) return false;
+      // header: width, height, left, top, advance
+      GlyphMetric gm = {.top = (int8_t)d[p + 3], .h = d[p + 1], .adv = d[p + 4]};
+      if (cp == GLYPH_WILDCARD_CP) m->wildcard = gm;
+      else if (cp >= GLYPH_FIRST && cp <= GLYPH_LAST) m->glyphs[cp - GLYPH_FIRST] = gm;
+    }
+  }
+  return true;
+}
+
+static bool load_face(uint32_t resource, FaceMetrics *m) {
+  ResHandle h = resource_get_handle(resource);
+  size_t size = resource_size(h);
+  uint8_t *d = malloc(size);
+  if (!d) return false;
+  bool ok = resource_load(h, d, size) == size && parse_face(d, size, m);
+  free(d);
+  return ok;
+}
+
+static void free_family(void) {
+  for (int f = 0; f < SYSFONT_COUNT; f++) {
+    if (s_family_fonts[f]) fonts_unload_custom_font(s_family_fonts[f]);
+    s_family_fonts[f] = NULL;
+  }
+  free(s_family_metrics);
+  s_family_metrics = NULL;
+  s_family = 0;
+}
+
+// Makes the theme's family current; Gothic if it is unknown or fails to load
+static void sync_family(void) {
+  uint8_t want = g_settings.text_font < TEXT_FAMILY_COUNT ? g_settings.text_font : 0;
+  if (want == s_family) return;
+  free_family();
+  if (!want) return;
+  s_family_metrics = malloc(sizeof(FaceMetrics) * SYSFONT_COUNT);
+  if (!s_family_metrics) return;
+  for (int f = 0; f < SYSFONT_COUNT; f++) {
+    if (!load_face(TEXT_FONT_RESOURCES[want - 1][f], &s_family_metrics[f])) {
+      free_family();
+      return;
+    }
+  }
+  s_family = want;
+}
+
+static const GlyphMetric *face_glyphs(SysFont f) {
+  return s_family ? s_family_metrics[f].glyphs : g_glyph_metrics[f];
+}
+
+static const GlyphMetric *face_wildcard(SysFont f) {
+  return s_family ? &s_family_metrics[f].wildcard : &g_glyph_wildcard[f];
+}
+
+static GFont face_font(SysFont f) {
+  if (!s_family) {
+    if (!s_fonts[f]) s_fonts[f] = fonts_get_system_font(FONT_KEYS[f]);
+    return s_fonts[f];
+  }
+  if (!s_family_fonts[f]) {
+    s_family_fonts[f] = fonts_load_custom_font(resource_get_handle(TEXT_FONT_RESOURCES[s_family - 1][f]));
+  }
+  return s_family_fonts[f];
+}
+
+// The face of the theme's family for a text size
 static SysFont font_for(int size, bool bold) {
+  sync_family();
   switch (size) {
     case 18: return bold ? SYSFONT_GOTHIC_18_BOLD : SYSFONT_GOTHIC_18;
     case 24: return bold ? SYSFONT_GOTHIC_24_BOLD : SYSFONT_GOTHIC_24;
     case 28: return bold ? SYSFONT_GOTHIC_28_BOLD : SYSFONT_GOTHIC_28;
-    case 30: return SYSFONT_BITHAM_30_BLACK;
-    case 42: return SYSFONT_BITHAM_42_BOLD;
     default: return bold ? SYSFONT_GOTHIC_14_BOLD : SYSFONT_GOTHIC_14;
   }
 }
@@ -34,12 +148,12 @@ static SysFont font_for(int size, bool bold) {
 // Whether the font has a glyph for cp (the preview's covers())
 static bool has_glyph(SysFont f, uint32_t cp) {
   if (cp == GLYPH_WILDCARD_CP) return true;
-  return cp >= GLYPH_FIRST && cp <= GLYPH_LAST && g_glyph_metrics[f][cp - GLYPH_FIRST].h != GLYPH_MISSING;
+  return cp >= GLYPH_FIRST && cp <= GLYPH_LAST && face_glyphs(f)[cp - GLYPH_FIRST].h != GLYPH_MISSING;
 }
 
 // Glyph metrics; missing characters are drawn as the wildcard glyph
 static const GlyphMetric *glyph(SysFont f, uint32_t cp) {
-  return has_glyph(f, cp) && cp != GLYPH_WILDCARD_CP ? &g_glyph_metrics[f][cp - GLYPH_FIRST] : &g_glyph_wildcard[f];
+  return has_glyph(f, cp) && cp != GLYPH_WILDCARD_CP ? &face_glyphs(f)[cp - GLYPH_FIRST] : face_wildcard(f);
 }
 
 static bool covers(SysFont f, const char *s) {
@@ -92,8 +206,6 @@ int text_fit(const char *s, double max_w, double max_h, bool bold) {
   for (int i = 0; i < TEXT_SIZE_COUNT; i++) {
     int size = TEXT_SIZES[i];
     SysFont f = font_for(size, bold);
-    // Bitham has no regular face; regular text stays in Gothic
-    if (!bold && f == font_for(size, true)) continue;
     if (!covers(f, s)) continue;
     int top, h;
     ink_font(s, f, &top, &h);
@@ -136,9 +248,8 @@ void g_text(const G *g, const char *s, double x, double y, int size, GColor colo
   }
   buf[n] = 0;
 
-  if (!s_fonts[f]) s_fonts[f] = fonts_get_system_font(FONT_KEYS[f]);
   graphics_context_set_text_color(g->ctx, color);
-  graphics_draw_text(g->ctx, buf, s_fonts[f], GRect(cx + TEXT_DX[f], line_top + TEXT_DY[f], w + 64, size * 2 + 16),
+  graphics_draw_text(g->ctx, buf, face_font(f), GRect(cx + TEXT_DX[f], line_top + TEXT_DY[f], w + 64, size * 2 + 16),
                      GTextOverflowModeWordWrap, GTextAlignmentLeft, NULL);
 }
 
@@ -503,6 +614,7 @@ void clock_end(ClockPainter *p) {
 }
 
 void render_free_fonts(void) {
+  free_family();
   for (int i = 0; i < CLOCK_FONT_COUNT; i++) {
     if (s_clock_fonts[i]) ffont_destroy(s_clock_fonts[i]);
     s_clock_fonts[i] = NULL;

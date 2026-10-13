@@ -103,7 +103,7 @@
   // --- layout helpers --------------------------------------------------
   //
   // Widgets draw on the canvas via box.g (raster.js). Text size is the
-  // firmware font size: 14, 18, 24, 28 (Gothic), 30 and 42 (Bitham).
+  // firmware Gothic size: 14, 18, 24 or 28.
 
   function clamp(v, lo, hi) {
     return Math.max(lo, Math.min(hi, v));

@@ -89,6 +89,12 @@
         <button type="button" class="swatch" data-color="theme.iconFill" data-inherit="Same as block" data-i18n-data-inherit></button>
       </div>
       <div class="field">
+        <span data-i18n>Text font</span>
+        <select id="fontSelect" data-bind="theme.font">
+          <option value="gothic" data-i18n>Gothic (system)</option>
+        </select>
+      </div>
+      <div class="field">
         <span data-i18n>Gap between blocks</span>
         <div class="seg" data-bind="theme.gap">
           <button type="button" data-v="0">0</button>
@@ -218,6 +224,7 @@
 <script src="js/layout.js"></script>
 <script src="js/fonts.js"></script>
 <script src="js/sysfonts.js"></script>
+<script src="js/textfonts/index.js"></script>
 <script src="js/icons.js"></script>
 <script src="js/widgets.js"></script>
 <script src="js/raster.js"></script>

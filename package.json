@@ -48,6 +48,366 @@
           "type": "raw"
         },
         {
+          "type": "font",
+          "name": "TEXT_ROBOTO_14",
+          "file": "fonts/text/roboto_14.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_ROBOTO_14_BOLD",
+          "file": "fonts/text/roboto_14_bold.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_ROBOTO_18",
+          "file": "fonts/text/roboto_18.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_ROBOTO_18_BOLD",
+          "file": "fonts/text/roboto_18_bold.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_ROBOTO_24",
+          "file": "fonts/text/roboto_24.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_ROBOTO_24_BOLD",
+          "file": "fonts/text/roboto_24_bold.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_ROBOTO_28",
+          "file": "fonts/text/roboto_28.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_ROBOTO_28_BOLD",
+          "file": "fonts/text/roboto_28_bold.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_ROBOTO_CONDENSED_14",
+          "file": "fonts/text/roboto_condensed_14.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_ROBOTO_CONDENSED_14_BOLD",
+          "file": "fonts/text/roboto_condensed_14_bold.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_ROBOTO_CONDENSED_18",
+          "file": "fonts/text/roboto_condensed_18.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_ROBOTO_CONDENSED_18_BOLD",
+          "file": "fonts/text/roboto_condensed_18_bold.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_ROBOTO_CONDENSED_24",
+          "file": "fonts/text/roboto_condensed_24.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_ROBOTO_CONDENSED_24_BOLD",
+          "file": "fonts/text/roboto_condensed_24_bold.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_ROBOTO_CONDENSED_28",
+          "file": "fonts/text/roboto_condensed_28.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_ROBOTO_CONDENSED_28_BOLD",
+          "file": "fonts/text/roboto_condensed_28_bold.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_FIRA_14",
+          "file": "fonts/text/fira_14.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_FIRA_14_BOLD",
+          "file": "fonts/text/fira_14_bold.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_FIRA_18",
+          "file": "fonts/text/fira_18.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_FIRA_18_BOLD",
+          "file": "fonts/text/fira_18_bold.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_FIRA_24",
+          "file": "fonts/text/fira_24.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_FIRA_24_BOLD",
+          "file": "fonts/text/fira_24_bold.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_FIRA_28",
+          "file": "fonts/text/fira_28.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_FIRA_28_BOLD",
+          "file": "fonts/text/fira_28_bold.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_UBUNTU_14",
+          "file": "fonts/text/ubuntu_14.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_UBUNTU_14_BOLD",
+          "file": "fonts/text/ubuntu_14_bold.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_UBUNTU_18",
+          "file": "fonts/text/ubuntu_18.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_UBUNTU_18_BOLD",
+          "file": "fonts/text/ubuntu_18_bold.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_UBUNTU_24",
+          "file": "fonts/text/ubuntu_24.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_UBUNTU_24_BOLD",
+          "file": "fonts/text/ubuntu_24_bold.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_UBUNTU_28",
+          "file": "fonts/text/ubuntu_28.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_UBUNTU_28_BOLD",
+          "file": "fonts/text/ubuntu_28_bold.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_BARLOW_14",
+          "file": "fonts/text/barlow_14.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_BARLOW_14_BOLD",
+          "file": "fonts/text/barlow_14_bold.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_BARLOW_18",
+          "file": "fonts/text/barlow_18.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_BARLOW_18_BOLD",
+          "file": "fonts/text/barlow_18_bold.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_BARLOW_24",
+          "file": "fonts/text/barlow_24.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_BARLOW_24_BOLD",
+          "file": "fonts/text/barlow_24_bold.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_BARLOW_28",
+          "file": "fonts/text/barlow_28.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_BARLOW_28_BOLD",
+          "file": "fonts/text/barlow_28_bold.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_BARLOW_CONDENSED_14",
+          "file": "fonts/text/barlow_condensed_14.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_BARLOW_CONDENSED_14_BOLD",
+          "file": "fonts/text/barlow_condensed_14_bold.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_BARLOW_CONDENSED_18",
+          "file": "fonts/text/barlow_condensed_18.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_BARLOW_CONDENSED_18_BOLD",
+          "file": "fonts/text/barlow_condensed_18_bold.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_BARLOW_CONDENSED_24",
+          "file": "fonts/text/barlow_condensed_24.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_BARLOW_CONDENSED_24_BOLD",
+          "file": "fonts/text/barlow_condensed_24_bold.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_BARLOW_CONDENSED_28",
+          "file": "fonts/text/barlow_condensed_28.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_BARLOW_CONDENSED_28_BOLD",
+          "file": "fonts/text/barlow_condensed_28_bold.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_LATO_14",
+          "file": "fonts/text/lato_14.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_LATO_14_BOLD",
+          "file": "fonts/text/lato_14_bold.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_LATO_18",
+          "file": "fonts/text/lato_18.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_LATO_18_BOLD",
+          "file": "fonts/text/lato_18_bold.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_LATO_24",
+          "file": "fonts/text/lato_24.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_LATO_24_BOLD",
+          "file": "fonts/text/lato_24_bold.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_LATO_28",
+          "file": "fonts/text/lato_28.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_LATO_28_BOLD",
+          "file": "fonts/text/lato_28_bold.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_PT_SANS_14",
+          "file": "fonts/text/pt_sans_14.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_PT_SANS_14_BOLD",
+          "file": "fonts/text/pt_sans_14_bold.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_PT_SANS_18",
+          "file": "fonts/text/pt_sans_18.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_PT_SANS_18_BOLD",
+          "file": "fonts/text/pt_sans_18_bold.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_PT_SANS_24",
+          "file": "fonts/text/pt_sans_24.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_PT_SANS_24_BOLD",
+          "file": "fonts/text/pt_sans_24_bold.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_PT_SANS_28",
+          "file": "fonts/text/pt_sans_28.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_PT_SANS_28_BOLD",
+          "file": "fonts/text/pt_sans_28_bold.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_PLEX_CONDENSED_14",
+          "file": "fonts/text/plex_condensed_14.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_PLEX_CONDENSED_14_BOLD",
+          "file": "fonts/text/plex_condensed_14_bold.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_PLEX_CONDENSED_18",
+          "file": "fonts/text/plex_condensed_18.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_PLEX_CONDENSED_18_BOLD",
+          "file": "fonts/text/plex_condensed_18_bold.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_PLEX_CONDENSED_24",
+          "file": "fonts/text/plex_condensed_24.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_PLEX_CONDENSED_24_BOLD",
+          "file": "fonts/text/plex_condensed_24_bold.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_PLEX_CONDENSED_28",
+          "file": "fonts/text/plex_condensed_28.pbf"
+        },
+        {
+          "type": "font",
+          "name": "TEXT_PLEX_CONDENSED_28_BOLD",
+          "file": "fonts/text/plex_condensed_28_bold.pbf"
+        },
+        {
           "type": "bitmap",
           "name": "ICON_BATTERY_CHARGE_14",
           "file": "icons/battery_charge_14.png",

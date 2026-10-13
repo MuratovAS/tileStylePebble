@@ -11,7 +11,7 @@
  */
 'use strict';
 
-var CONFIG_VERSION = 2;  // settings blob
+var CONFIG_VERSION = 3;  // settings blob
 var WEATHER_VERSION = 1; // weather blob
 var MAX_BLOCKS = 16;
 var MAX_HOURLY = 48;
@@ -21,13 +21,18 @@ var SCREEN_W = 200;
 var SCREEN_H = 228;
 var MIN_TRACK = 20;
 
+// Theme text fonts in protocol order: the firmware's Gothic, then the families
+// of tools/textfonts.py (config/js/textfonts/index.js, src/c/gen_textfonts.h)
+var TEXT_FONTS = ['gothic', 'roboto', 'roboto_condensed', 'fira', 'ubuntu', 'barlow', 'barlow_condensed', 'lato',
+  'pt_sans', 'plex_condensed'];
+
 // --- defaults (duplicated from the settings page) ------------------------
 
 // config.js THEME_DEFAULTS + the "timestyle" preset's theme
 var THEME_DEFAULTS = {
   bg: '#000000', tile: null, fg: '#FFFFFF', accent: '#FF5500', iconFill: '#FFFFFF',
   gap: 0, radius: 0,
-  lineOn: false, lineWidth: 1, lineColor: '#FFFFFF', lineStyle: 'solid'
+  lineOn: false, lineWidth: 1, lineColor: '#FFFFFF', lineStyle: 'solid', font: 'gothic'
 };
 
 // config.js DEFAULT_GENERAL (weather location fields are phone-only)
@@ -296,7 +301,7 @@ function alignOf(widget, o) {
 }
 
 /*
- * Settings JSON (object or string) -> settings blob v2 (array of bytes).
+ * Settings JSON (object or string) -> settings blob v3 (array of bytes).
  */
 function encodeConfig(cfg) {
   if (typeof cfg === 'string') cfg = JSON.parse(cfg);
@@ -328,6 +333,7 @@ function encodeConfig(cfg) {
   );
   // 0 = weather off: the watch should not request it
   out.push(g.weatherSource === 'off' ? 0 : int(g.weatherInterval, G.weatherInterval, 1, 255));
+  out.push(choice(t.font, TEXT_FONTS, D.font));
 
   var blocks = layoutOf(cfg);
   out.push(blocks.length);
@@ -393,6 +399,7 @@ module.exports = {
   WEATHER_VERSION: WEATHER_VERSION,
   MAX_BLOCKS: MAX_BLOCKS,
   MAX_HOURLY: MAX_HOURLY,
+  TEXT_FONTS: TEXT_FONTS,
   WIDGET_IDS: WIDGET_IDS,
   WEATHER: WEATHER,
   WEATHER_WIDGETS: WEATHER_WIDGETS,

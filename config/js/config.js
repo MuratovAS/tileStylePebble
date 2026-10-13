@@ -27,7 +27,8 @@
     lineOn: false,      // lines between blocks
     lineWidth: 1,
     lineColor: '#FFFFFF',
-    lineStyle: 'solid'  // solid | dashed | dotted
+    lineStyle: 'solid', // solid | dashed | dotted
+    font: 'gothic'      // text font: gothic or a family of js/textfonts
   };
 
   // the layout used before the first config, as on the watch (src/c/settings.c)
@@ -1125,7 +1126,19 @@
     $('#jsonOut').textContent = JSON.stringify(buildConfig(), null, 2);
   }
 
+  // Text font candidates (js/textfonts/index.js), after the watch's Gothic
+  function fillFonts() {
+    var sel = $('#fontSelect');
+    (window.PebbleTextFamilies || []).forEach(function (f) {
+      var opt = document.createElement('option');
+      opt.value = f[0];
+      opt.textContent = f[1];
+      sel.appendChild(opt);
+    });
+  }
+
   function init() {
+    fillFonts();
     translatePage();
     migrateStorage();
     loadInitial();

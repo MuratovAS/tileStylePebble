@@ -11,7 +11,7 @@
 #include "icons.h"
 #include "settings.h"
 
-#define TEXT_SIZE_COUNT 6
+#define TEXT_SIZE_COUNT 4
 extern const int TEXT_SIZES[TEXT_SIZE_COUNT];
 
 typedef enum { CLOCK_AVENIR = 0, CLOCK_BOLD = 1, CLOCK_LECO = 2 } ClockFont;
@@ -24,7 +24,8 @@ typedef struct {
   GPoint origin;     // block position on screen (fctx draws in screen coordinates)
 } G;
 
-// --- text in firmware fonts (sizes 14, 18, 24, 28, 30, 42) ---
+// --- text: sizes 14, 18, 24, 28 in the theme's font (settings text_font):
+// the firmware's Gothic or an app font of tools/textfonts.py ---
 int text_measure(const char *s, int size, bool bold);
 // Vertical ink bounds of a line relative to the line top
 void text_ink(const char *s, int size, bool bold, int *top, int *h);

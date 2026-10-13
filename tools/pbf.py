@@ -38,7 +38,10 @@ def _bits_rle4(data, units, w):
 
 
 def load(path):
-    font = open(path, "rb").read()
+    return parse(open(path, "rb").read())
+
+
+def parse(font):
     version = font[0]
     if version == 3:
         (version, max_height, num_glyphs, wildcard, table_size, cp_bytes, _size, features) = \
