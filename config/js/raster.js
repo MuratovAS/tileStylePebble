@@ -440,6 +440,8 @@
         var best = TEXT_SIZES[0];
         for (var i = 0; i < TEXT_SIZES.length; i++) {
           var s = TEXT_SIZES[i];
+          // Bitham has no regular face; regular text stays in Gothic
+          if (!bold && fontKey(s, false) === fontKey(s, true)) continue;
           if (!covers(fontKey(s, bold), str)) continue;
           if (ink(str, s, bold).h <= maxH && measure(str, s, bold) <= maxW) best = s;
         }

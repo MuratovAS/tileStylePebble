@@ -92,6 +92,8 @@ int text_fit(const char *s, double max_w, double max_h, bool bold) {
   for (int i = 0; i < TEXT_SIZE_COUNT; i++) {
     int size = TEXT_SIZES[i];
     SysFont f = font_for(size, bold);
+    // Bitham has no regular face; regular text stays in Gothic
+    if (!bold && f == font_for(size, true)) continue;
     if (!covers(f, s)) continue;
     int top, h;
     ink_font(s, f, &top, &h);
