@@ -9,11 +9,11 @@ with a widget: time, date, weather, health and more. Inspired by
 fonts and icons.
 
 <p>
-  <img src="assets/settings-desktop.png" alt="Settings page: preview, layouts and block options" width="820">
+  <img src="screenshots/settings-desktop.png" alt="Settings page: preview, layouts and block options" width="820">
 </p>
 <p>
-  <img src="assets/settings-mobile-1.png" alt="Settings page on a phone: widget picker" width="300">
-  <img src="assets/settings-mobile-2.png" alt="Settings page on a phone: theme and general settings" width="300">
+  <img src="screenshots/settings-mobile-1.png" alt="Settings page on a phone: widget picker" width="300">
+  <img src="screenshots/settings-mobile-2.png" alt="Settings page on a phone: theme and general settings" width="300">
 </p>
 
 ## Features
@@ -172,6 +172,7 @@ Don't edit these by hand; regenerate them:
 | File | Command | Source |
 |---|---|---|
 | `resources/app_icon.png` (the menu icon, 25×25), `screenshots/icon_small.png` and `icon_large.png` (app store, 80×80 and 144×144) | `python3 tools/app_icon.py` | the pixel map in `tools/app_icon.py` |
+| `screenshots/settings-*.png` (the settings page, for this README) | `node tools/settings_screenshots.mjs <chromium>` | the settings page in a headless Chromium: dark theme, 2× pixels, clock at 10:09 |
 | `screenshots/emery_*.png` (app store screenshots) | `python3 tools/screenshots.py [preset ...]` | built-in layouts on the emulator, with demo data at 10:10 |
 | `resources/icons/*.png` | `python3 tools/icons.py render` | `resources/icons_src/`, vectors in `widgets.js` |
 | `config/js/icons.js` | `python3 tools/icons.py js` | `resources/icons/*.png` |
