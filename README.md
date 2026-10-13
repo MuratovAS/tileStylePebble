@@ -3,8 +3,8 @@
 [![CI](https://github.com/MuratovAS/tileStylePebble/actions/workflows/ci.yml/badge.svg)](https://github.com/MuratovAS/tileStylePebble/actions/workflows/ci.yml)
 
 A fully customizable watchface for Pebble Time 2 (platform `emery`, 200×228,
-64 colors). Split the screen into a 4×4 grid, merge cells into blocks and fill
-each block with a widget: time, date, weather, health and more. Inspired by
+64 colors). Split the screen into blocks of any size and fill each block
+with a widget: time, date, weather, health and more. Inspired by
 [TimeStyle](https://github.com/freakified/TimeStylePebble) and built on its
 fonts and icons.
 
@@ -18,8 +18,10 @@ fonts and icons.
 
 ## Features
 
-- **4×4 grid.** Column widths and row heights are adjustable (20 px minimum),
-  and cells merge into blocks of any rectangular size.
+- **Free layout.** Blocks tile the screen and can be split in halves, merged
+  and resized one by one: a border moves only between the blocks along it
+  (20 px minimum, up to 16 blocks). Borders snap to an even 4×4 grid and to
+  each other.
 - **Widgets:**
   - time (Avenir, Avenir DemiBold or LECO; on one line or hours over minutes);
   - date from a pattern or as a calendar sheet, weekday, seconds, week
@@ -34,6 +36,7 @@ fonts and icons.
   - theme colors, plus per-block overrides;
   - gaps and rounded corners between blocks;
   - lines between blocks: solid, dashed or dotted;
+  - labels under values ("steps", "bpm", "kcal", "km", "UV") on or off;
   - text font: the firmware's Gothic or one of nine bitmap families (Roboto,
     Roboto Condensed, Fira Sans, Ubuntu, Barlow, Barlow Condensed, Lato,
     PT Sans, IBM Plex Sans Condensed); the clock has its own font choice.
@@ -51,9 +54,9 @@ On-watch labels are in English: the text fonts have no Cyrillic.
    yourself (see below).
 2. Open the watchface settings in the Pebble app. This opens the settings
    page (<https://muratovas.github.io/tileStylePebble/>), where you can:
-   - select cells on the preview and merge them into a block;
+   - split blocks, merge them and drag the borders between them;
    - choose a widget for the block and set its options;
-   - set up the theme, grid and general options: 12/24 h, units, weather,
+   - set up the theme and general options: 12/24 h, units, weather,
      vibration on disconnect.
 3. Tap Save. The settings are sent to the watch, and the weather is refreshed
    if the layout has weather widgets.
@@ -116,9 +119,9 @@ also why a widget change has to be made on both sides.
 
 ## Development
 
-Tests for the phone code and the binary format:
+Tests for the phone code, the binary format and the layout model:
 
-    node tools/test_protocol.js && node tools/test_pkjs.js
+    node tools/test_protocol.js && node tools/test_pkjs.js && node tools/test_layout.js
 
 Send a layout and weather to a running emulator, without the settings page:
 
@@ -186,37 +189,38 @@ block's icon fill color, else the theme's, else the block background.
 
 ### Settings format
 
-The page saves settings as JSON (v1). The phone code encodes them into the
+The page saves settings as JSON (v2). The phone code encodes them into the
 compact binary blob described in `src/c/protocol.h`.
 
 ```json
 {
-  "v": 1,
-  "grid": { "cols": [53, 53, 52, 42], "rows": [57, 57, 57, 57] },
+  "v": 2,
   "layout": [
-    { "x": 0, "y": 0, "w": 3, "h": 4, "widget": "time",
+    { "x": 0, "y": 0, "w": 158, "h": 228, "widget": "time",
       "opts": { "font": "avenir", "stack": "stack", "zero": true, "aa": false, "align": "center" } },
-    { "x": 3, "y": 0, "w": 1, "h": 1, "widget": "weather",
+    { "x": 158, "y": 0, "w": 42, "h": 57, "widget": "weather",
       "bg": "#FF5500", "fg": "#000000", "accent": "#000000", "opts": { "align": "center" } }
   ],
   "theme": { "bg": "#000000", "tile": null, "fg": "#FFFFFF", "accent": "#FF5500", "iconFill": "#FFFFFF",
              "gap": 0, "radius": 0, "lineOn": false, "lineWidth": 1, "lineColor": "#FFFFFF", "lineStyle": "solid",
-             "font": "gothic" },
+             "font": "gothic", "labels": true },
   "general": { "clock24": true, "metric": true, "btVibe": true,
                "weatherSource": "manual", "weatherLocation": "Moscow, Russia",
                "weatherLat": 55.7505, "weatherLon": 37.6175, "weatherInterval": 30 }
 }
 ```
 
-- `grid`: column widths and row heights in pixels. They always sum to 200 and
-  228.
-- `layout`: blocks in grid cells, covering each of the 16 cells exactly once.
+- `layout`: blocks in screen pixels that tile the 200×228 screen: no overlaps,
+  no holes, no side shorter than 20 px, at most 16 blocks.
   A block's `bg`/`fg`/`accent`/`iconFill` are optional and default to the
   theme colors.
   `opts` always holds every widget option, defaults included.
 - `theme.tile: null` means blocks have no background of their own;
   `iconFill: null` fills icons with the block background. Half of `gap` is
   taken from each inner side of a block.
+- Version 1 had blocks in the cells of a 4×4 grid plus `grid` (column widths
+  and row heights in pixels); the page and the phone still read it, as do
+  the built-in layouts in `config/js/presets.js`.
 - `weatherSource`: `gps`, `manual` (coordinates of a place picked from
   OpenStreetMap Nominatim suggestions) or `off`.
 

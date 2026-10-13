@@ -9,12 +9,11 @@ Settings g_settings;
 #define PERSIST_CHUNK 256
 
 // Default: the "timestyle" preset of config/js/presets.js with the widget
-// option defaults of config/js/widgets.js
+// option defaults of config/js/widgets.js (its grid: columns 53, 53, 52, 42,
+// rows of 57 px)
 static const uint8_t DEFAULT_BLOB[] = {
   CONFIG_VERSION,          // version
   0x07,                    // clock24, metric, btVibe
-  53, 53, 52, 42,          // cols
-  57, 57, 57, 57,          // rows
   0xC0, 0x00, 0xFF, 0xF4,  // bg black, tile null, fg white, accent #FF5500
   0xFF,                    // iconFill white
   0, 0,                    // gap, radius
@@ -23,15 +22,15 @@ static const uint8_t DEFAULT_BLOB[] = {
   0,                       // text font: Gothic
   5,                       // blocks
   // time: avenir, stack, zero
-  0, 0, 3, 4, WIDGET_TIME, 0, 0, 0, 0, ALIGN_CENTER, 3, 0, 2, 0x01,
+  0, 0, 158, 228, WIDGET_TIME, 0, 0, 0, 0, ALIGN_CENTER, 3, 0, 2, 0x01,
   // weather
-  3, 0, 1, 1, WIDGET_WEATHER, 0xF4, 0xC0, 0xC0, 0, ALIGN_CENTER, 0,
+  158, 0, 42, 57, WIDGET_WEATHER, 0xF4, 0xC0, 0xC0, 0, ALIGN_CENTER, 0,
   // date: calendar, upper, pattern "%a %e %b"
-  3, 1, 1, 1, WIDGET_DATE, 0xF4, 0xC0, 0xC0, 0, ALIGN_CENTER, 11, 0, 1, 8, '%', 'a', ' ', '%', 'e', ' ', '%', 'b',
+  158, 57, 42, 57, WIDGET_DATE, 0xF4, 0xC0, 0xC0, 0, ALIGN_CENTER, 11, 0, 1, 8, '%', 'a', ' ', '%', 'e', ' ', '%', 'b',
   // steps: goal 0, short
-  3, 2, 1, 1, WIDGET_STEPS, 0xF4, 0xC0, 0xC0, 0, ALIGN_CENTER, 3, 0, 0, 1,
+  158, 114, 42, 57, WIDGET_STEPS, 0xF4, 0xC0, 0xC0, 0, ALIGN_CENTER, 3, 0, 0, 1,
   // battery: icon_pct
-  3, 3, 1, 1, WIDGET_BATTERY, 0xF4, 0xC0, 0xC0, 0, ALIGN_CENTER, 1, 1,
+  158, 171, 42, 57, WIDGET_BATTERY, 0xF4, 0xC0, 0xC0, 0, ALIGN_CENTER, 1, 1,
 };
 
 // Option defaults from widgets.js, in protocol byte order
@@ -73,55 +72,79 @@ static void parse_opts(BlockConfig *b, const uint8_t *p, int len) {
   }
 }
 
+#define GRID_N 4  // cells per side of the grid of versions 1 to 3
+
+static int track_offset(const uint8_t *tracks, int i) {
+  int o = 0;
+  for (int k = 0; k < i; k++) o += tracks[k];
+  return o;
+}
+
 static bool parse(Settings *s, const uint8_t *d, int len) {
-  if (len < 22 || d[0] < 1 || d[0] > CONFIG_VERSION) return false;
-  // versions 1 and 2 (stored by earlier releases): no text font byte;
+  if (len < 15 || d[0] < 1 || d[0] > CONFIG_VERSION) return false;
+  int v = d[0];
+  // versions 1 to 3 (stored by earlier releases): blocks in the cells of a
+  // grid whose tracks follow the flags; 1 and 2 have no text font byte, and
   // in version 1 blocks have no iconFill byte
-  int head = d[0] == 1 ? 10 : 11;
-  int base = d[0] >= 3 ? 22 : 21;  // block count
-  if (len < base + 1) return false;
+  bool cells = v < 4;
+  const uint8_t *cols = d + 2, *rows = d + 6;
+  int t0 = cells ? 10 : 2;                      // theme
+  int count_at = t0 + (v >= 3 ? 12 : 11);
+  int head = v == 1 ? 10 : 11;
+  if (len < count_at + 1) return false;
   memset(s, 0, sizeof(*s));
   s->clock24 = d[1] & 1;
   s->metric = (d[1] >> 1) & 1;
   s->bt_vibe = (d[1] >> 2) & 1;
   s->line_on = (d[1] >> 3) & 1;
-  int sc = 0, sr = 0;
-  for (int i = 0; i < GRID_N; i++) {
-    s->cols[i] = d[2 + i];
-    s->rows[i] = d[6 + i];
-    if (!s->cols[i] || !s->rows[i]) return false;
-    sc += s->cols[i];
-    sr += s->rows[i];
+  s->no_labels = (d[1] >> 4) & 1;
+  if (cells) {
+    int sc = 0, sr = 0;
+    for (int i = 0; i < GRID_N; i++) {
+      if (!cols[i] || !rows[i]) return false;
+      sc += cols[i];
+      sr += rows[i];
+    }
+    if (sc != SCREEN_W || sr != SCREEN_H) return false;
   }
-  if (sc != SCREEN_W || sr != SCREEN_H) return false;
-  s->bg = d[10];
-  s->tile = d[11];
-  s->fg = d[12];
-  s->accent = d[13];
-  s->icon_fill = d[14];
-  s->gap = d[15];
-  s->radius = d[16];
-  s->line_width = CLAMP(d[17], 1, 8);
-  s->line_color = d[18];
-  s->line_style = d[19] <= LINE_DOTTED ? d[19] : LINE_SOLID;
-  s->weather_interval = d[20];
-  s->text_font = base == 22 ? d[21] : 0;  // unknown families draw Gothic (render.c)
-  s->count = d[base];
+  s->bg = d[t0];
+  s->tile = d[t0 + 1];
+  s->fg = d[t0 + 2];
+  s->accent = d[t0 + 3];
+  s->icon_fill = d[t0 + 4];
+  s->gap = d[t0 + 5];
+  s->radius = d[t0 + 6];
+  s->line_width = CLAMP(d[t0 + 7], 1, 8);
+  s->line_color = d[t0 + 8];
+  s->line_style = d[t0 + 9] <= LINE_DOTTED ? d[t0 + 9] : LINE_SOLID;
+  s->weather_interval = d[t0 + 10];
+  s->text_font = v >= 3 ? d[t0 + 11] : 0;  // unknown families draw Gothic (render.c)
+  s->count = d[count_at];
   if (!s->bg) s->bg = GColorBlackARGB8;
   if (!s->fg) s->fg = GColorWhiteARGB8;
   if (!s->accent) s->accent = s->fg;
   if (s->count < 1 || s->count > CONFIG_MAX_BLOCKS) return false;
 
-  uint16_t covered = 0;
-  int off = base + 1;
+  uint32_t area = 0;
+  int off = count_at + 1;
   for (int i = 0; i < s->count; i++) {
     if (off + head > len) return false;
     BlockConfig *b = &s->blocks[i];
     const uint8_t *p = d + off;
-    b->x = p[0];
-    b->y = p[1];
-    b->w = p[2];
-    b->h = p[3];
+    int x = p[0], y = p[1], w = p[2], h = p[3];
+    if (cells) {
+      if (!w || !h || x + w > GRID_N || y + h > GRID_N) return false;
+      int x0 = track_offset(cols, x), y0 = track_offset(rows, y);
+      w = track_offset(cols, x + w) - x0;
+      h = track_offset(rows, y + h) - y0;
+      x = x0;
+      y = y0;
+    }
+    if (!w || !h || x + w > SCREEN_W || y + h > SCREEN_H) return false;
+    b->x = x;
+    b->y = y;
+    b->w = w;
+    b->h = h;
     b->widget = p[4] < WIDGET_COUNT ? p[4] : WIDGET_EMPTY;  // unknown ids draw nothing
     b->bg = p[5];
     b->fg = p[6];
@@ -134,17 +157,14 @@ static bool parse(Settings *s, const uint8_t *d, int len) {
     if (off + ol > len) return false;
     parse_opts(b, d + off, ol);
     off += ol;
-    if (!b->w || !b->h || b->x + b->w > GRID_N || b->y + b->h > GRID_N) return false;
-    // every cell must be covered exactly once
-    for (int y = b->y; y < b->y + b->h; y++) {
-      for (int x = b->x; x < b->x + b->w; x++) {
-        uint16_t bit = 1 << (y * GRID_N + x);
-        if (covered & bit) return false;
-        covered |= bit;
-      }
+    // the blocks must tile the screen: no overlaps and the screen's area in total
+    for (int j = 0; j < i; j++) {
+      const BlockConfig *o = &s->blocks[j];
+      if (b->x < o->x + o->w && o->x < b->x + b->w && b->y < o->y + o->h && o->y < b->y + b->h) return false;
     }
+    area += (uint32_t)b->w * b->h;
   }
-  return covered == 0xFFFF;
+  return area == (uint32_t)SCREEN_W * SCREEN_H;
 }
 
 // The length is cleared first and written last, only when every chunk was
@@ -197,23 +217,14 @@ void settings_init(void) {
   if (!ok) parse(&g_settings, DEFAULT_BLOB, sizeof(DEFAULT_BLOB));
 }
 
-static int track_offset(const uint8_t *tracks, int i) {
-  int o = 0;
-  for (int k = 0; k < i; k++) o += tracks[k];
-  return o;
-}
-
 GRect settings_block_rect(const BlockConfig *b) {
-  const Settings *s = &g_settings;
-  int x0 = track_offset(s->cols, b->x), x1 = track_offset(s->cols, b->x + b->w);
-  int y0 = track_offset(s->rows, b->y), y1 = track_offset(s->rows, b->y + b->h);
   // the page only offers even gaps; an odd one is rounded down
-  int half = s->gap / 2;
+  int half = g_settings.gap / 2;
   int l = b->x == 0 ? 0 : half;
-  int r = b->x + b->w == GRID_N ? 0 : half;
+  int r = b->x + b->w == SCREEN_W ? 0 : half;
   int t = b->y == 0 ? 0 : half;
-  int bt = b->y + b->h == GRID_N ? 0 : half;
-  return GRect(x0 + l, y0 + t, x1 - x0 - l - r, y1 - y0 - t - bt);
+  int bt = b->y + b->h == SCREEN_H ? 0 : half;
+  return GRect(b->x + l, b->y + t, b->w - l - r, b->h - t - bt);
 }
 
 bool settings_has_widget(WidgetId id) {

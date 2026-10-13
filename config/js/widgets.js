@@ -141,9 +141,10 @@
   }
 
   // Standard "icon + value (+ label)" layout: stacked in square and
-  // tall blocks, in a row in wide ones.
+  // tall blocks, in a row in wide ones. The theme can turn labels off.
   // drawIcon(x, y, size, color) draws the icon with its top-left corner at x,y.
   function metric(box, drawIcon, value, label) {
+    if (!box.labels) label = '';
     var g = box.g, w = box.w, h = box.h, pad = 4;
     var fg = box.c.fg, accent = box.c.accent;
 
@@ -756,74 +757,17 @@
     return out;
   }
 
-  // --- grid proportions ------------------------------------------------
-  //
-  // grid = {cols: [widths], rows: [heights]} in pixels; the sums always
-  // equal the screen width and height, and no track is narrower than MIN_TRACK.
+  // --- block geometry --------------------------------------------------
 
-  var MIN_TRACK = 20;
-
-  function splitEven(total, n) {
-    var out = [];
-    for (var i = 0; i < n; i++) {
-      out.push(Math.floor(total * (i + 1) / n) - Math.floor(total * i / n));
-    }
-    return out;
-  }
-
-  function equalGrid(cols, rows) {
-    return { cols: splitEven(SCREEN.w, cols), rows: splitEven(SCREEN.h, rows) };
-  }
-
-  function tracksValid(arr, n, total) {
-    if (!Array.isArray(arr) || arr.length !== n) return false;
-    var sum = 0;
-    for (var i = 0; i < n; i++) {
-      if (arr[i] !== Math.round(arr[i]) || arr[i] < MIN_TRACK) return false;
-      sum += arr[i];
-    }
-    return sum === total;
-  }
-
-  function normalizeGrid(g, cols, rows) {
-    var eq = equalGrid(cols, rows);
-    if (!g) return eq;
-    return {
-      cols: tracksValid(g.cols, cols, SCREEN.w) ? g.cols.slice() : eq.cols,
-      rows: tracksValid(g.rows, rows, SCREEN.h) ? g.rows.slice() : eq.rows
-    };
-  }
-
-  // [50, 50, 50, 50] -> [0, 50, 100, 150, 200]
-  function offsets(arr) {
-    var out = [0];
-    for (var i = 0; i < arr.length; i++) out.push(out[i] + arr[i]);
-    return out;
-  }
-
-  // Moves divider i (between tracks i-1 and i) to position pos
-  function moveDivider(arr, i, pos) {
-    var off = offsets(arr);
-    var p = Math.round(Math.max(off[i - 1] + MIN_TRACK, Math.min(off[i + 1] - MIN_TRACK, pos)));
-    var out = arr.slice();
-    out[i - 1] = p - off[i - 1];
-    out[i] = off[i + 1] - p;
-    return out;
-  }
-
-  // Block pixel bounds, accounting for grid proportions and the gap
-  function blockPixels(b, gap, grid) {
-    var ox = offsets(grid.cols);
-    var oy = offsets(grid.rows);
-    var cols = grid.cols.length, rows = grid.rows.length;
-    var x0 = ox[b.x], x1 = ox[b.x + b.w];
-    var y0 = oy[b.y], y1 = oy[b.y + b.h];
+  // Block pixel bounds less the gap: half of it on every side that is not on
+  // the screen edge (b is in screen pixels, layout.js)
+  function blockPixels(b, gap) {
     var half = gap / 2;
     var l = b.x === 0 ? 0 : half;
-    var r = b.x + b.w === cols ? 0 : half;
+    var r = b.x + b.w === SCREEN.w ? 0 : half;
     var t = b.y === 0 ? 0 : half;
-    var bt = b.y + b.h === rows ? 0 : half;
-    return { x: x0 + l, y: y0 + t, w: x1 - x0 - l - r, h: y1 - y0 - t - bt };
+    var bt = b.y + b.h === SCREEN.h ? 0 : half;
+    return { x: b.x + l, y: b.y + t, w: b.w - l - r, h: b.h - t - bt };
   }
 
   // --- Pebble palette: 64 colors, 2 bits per channel --------------------
@@ -853,17 +797,12 @@
     LIST: LIST,
     GROUPS: GROUPS,
     PALETTE: PALETTE,
-    MIN_TRACK: MIN_TRACK,
     ICONS: ICONS,
     get: get,
     fits: fits,
     minSize: minSize,
     icon: icon,
     resolveOpts: resolveOpts,
-    equalGrid: equalGrid,
-    normalizeGrid: normalizeGrid,
-    offsets: offsets,
-    moveDivider: moveDivider,
     blockPixels: blockPixels,
     formatDate: formatDate,
     fmtK: fmtK,

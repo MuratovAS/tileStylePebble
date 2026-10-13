@@ -38,6 +38,7 @@ jobs:
       - run: npm ci
       - run: node tools/test_protocol.js
       - run: node tools/test_pkjs.js
+      - run: node tools/test_layout.js
 
   build:
     runs-on: ubuntu-24.04

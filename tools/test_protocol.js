@@ -27,6 +27,7 @@ function loadPage(file, name) {
   return sb[name];
 }
 var Widgets = loadPage('widgets.js', 'Widgets');
+var Layout = loadPage('layout.js', 'Layout');
 // theme text fonts as the page lists them: Gothic, then tools/textfonts.py's families
 var TEXT_FONTS = ['gothic'].concat(loadPage('textfonts/index.js', 'PebbleTextFamilies').map(function (f) { return f[0]; }));
 var Presets = tool.loadPresets();
@@ -113,9 +114,8 @@ function decodeConfig(bytes) {
   var r = new Reader(bytes);
   var c = { version: r.u8() };
   var f = r.u8();
-  c.flags = { clock24: !!(f & 1), metric: !!(f & 2), btVibe: !!(f & 4), lineOn: !!(f & 8) };
-  assert.strictEqual(f & ~15, 0, 'unknown flag bits');
-  c.grid = { cols: r.bytes(4), rows: r.bytes(4) };
+  c.flags = { clock24: !!(f & 1), metric: !!(f & 2), btVibe: !!(f & 4), lineOn: !!(f & 8), labels: !(f & 16) };
+  assert.strictEqual(f & ~31, 0, 'unknown flag bits');
   c.theme = {
     bg: r.u8(), tile: r.u8(), fg: r.u8(), accent: r.u8(), iconFill: r.u8(),
     gap: r.u8(), radius: r.u8(), lineWidth: r.u8(), lineColor: r.u8(), lineStyle: LINE[r.u8()]
@@ -192,19 +192,31 @@ function expectedOpts(key, rawOpts) {
   }
 }
 
+// Blocks of settings in screen pixels: as they are from v2 on, before that
+// converted from the cells of the grid
+function pixelBlocks(settings) {
+  if (settings.v >= 2) return settings.layout;
+  var ox = [0], oy = [0];
+  settings.grid.cols.forEach(function (w, i) { ox.push(ox[i] + w); });
+  settings.grid.rows.forEach(function (h, i) { oy.push(oy[i] + h); });
+  return settings.layout.map(function (b) {
+    return Object.assign({}, b, { x: ox[b.x], y: oy[b.y], w: ox[b.x + b.w] - ox[b.x], h: oy[b.y + b.h] - oy[b.y] });
+  });
+}
+
 function checkConfig(settings, label) {
   var c = decodeConfig(protocol.encodeConfig(settings));
   var t = settings.theme, g = settings.general;
-  assert.strictEqual(c.version, 3);
-  assert.deepStrictEqual(c.flags, { clock24: g.clock24, metric: g.metric, btVibe: g.btVibe, lineOn: !!t.lineOn }, label);
-  assert.deepStrictEqual(c.grid, settings.grid, label);
+  assert.strictEqual(c.version, 4);
+  assert.deepStrictEqual(c.flags, { clock24: g.clock24, metric: g.metric, btVibe: g.btVibe, lineOn: !!t.lineOn,
+    labels: t.labels !== false }, label);
   assert.deepStrictEqual(c.theme, {
     bg: col(t.bg), tile: col(t.tile), fg: col(t.fg), accent: col(t.accent), iconFill: col(t.iconFill),
     gap: t.gap, radius: t.radius, lineWidth: t.lineWidth, lineColor: col(t.lineColor), lineStyle: t.lineStyle,
     font: t.font || 'gothic'
   }, label);
   assert.strictEqual(c.weatherInterval, g.weatherSource === 'off' ? 0 : g.weatherInterval, label);
-  var layout = settings.layout.slice().sort(function (a, b) { return a.y - b.y || a.x - b.x; });
+  var layout = pixelBlocks(settings).slice().sort(function (a, b) { return a.y - b.y || a.x - b.x; });
   assert.strictEqual(c.blocks.length, layout.length, label);
   layout.forEach(function (b, i) {
     var d = c.blocks[i], l = label + ' block ' + i + ' (' + b.widget + ')';
@@ -314,7 +326,7 @@ function syntheticSettings() {
       return b;
     }),
     theme: { bg: '#550055', tile: '#AAAAAA', fg: '#FFFF00', accent: '#00FFAA', iconFill: null, gap: 6, radius: 12,
-      lineOn: true, lineWidth: 3, lineColor: '#5555AA', lineStyle: 'dashed', font: 'barlow_condensed' },
+      lineOn: true, lineWidth: 3, lineColor: '#5555AA', lineStyle: 'dashed', font: 'barlow_condensed', labels: false },
     general: { clock24: false, metric: false, btVibe: false, weatherSource: 'manual', weatherLocation: 'X',
       weatherLat: 1.5, weatherLon: 2.5, weatherInterval: 120 }
   };
@@ -334,6 +346,46 @@ test('synthetic config with every widget', function () {
   assert.strictEqual(c.blocks[12].align, 'center'); // divider has no alignment
   assert.strictEqual(c.theme.iconFill, 0);
   assert.strictEqual(c.theme.tile, Widgets.toGColor8('#AAAAAA'));
+});
+
+test('pixel layout (v2) with blocks off any grid', function () {
+  var s = syntheticSettings();
+  s.v = 2;
+  delete s.grid;
+  s.layout = [
+    { x: 0, y: 0, w: 73, h: 100, widget: 'time' },
+    { x: 73, y: 0, w: 127, h: 61, widget: 'date', opts: { format: 'calendar' } },
+    { x: 73, y: 61, w: 127, h: 39, widget: 'battery' },
+    { x: 0, y: 100, w: 21, h: 128, widget: 'empty' },
+    { x: 21, y: 100, w: 179, h: 128, widget: 'steps' }
+  ];
+  checkConfig(s, 'pixels');
+});
+
+test('layouts that do not tile the screen fall back to the default', function () {
+  var def = decodeConfig(protocol.encodeConfig({})).blocks;
+  function blocksOf(layout) { return decodeConfig(protocol.encodeConfig({ v: 2, layout: layout })).blocks; }
+  var whole = { x: 0, y: 0, w: 200, h: 228, widget: 'time' };
+  assert.strictEqual(blocksOf([whole]).length, 1);
+  assert.deepStrictEqual(blocksOf([Object.assign({}, whole, { w: 199 })]), def, 'hole');
+  assert.deepStrictEqual(blocksOf([whole, { x: 0, y: 0, w: 20, h: 20, widget: 'empty' }]), def, 'overlap');
+  assert.deepStrictEqual(blocksOf([{ x: 0, y: 0, w: 19, h: 228, widget: 'time' }, { x: 19, y: 0, w: 181, h: 228 }]), def, 'side < 20');
+  assert.deepStrictEqual(blocksOf([Object.assign({}, whole, { w: 200.5 })]), def, 'fraction');
+  var strips = [];
+  for (var i = 0; i < 17; i++) strips.push({ x: 0, y: i * 12, w: 200, h: i === 16 ? 36 : 12 });
+  assert.deepStrictEqual(blocksOf(strips), def, 'too many blocks');
+});
+
+test('the page and pkjs convert grid layouts to the same pixels', function () {
+  Presets.forEach(function (p) {
+    var page = plain(Layout.fromSaved(p).map(function (b) { return [b.x, b.y, b.w, b.h, b.widget]; }));
+    var pkjs = protocol.pixelLayout(p).slice().sort(function (a, b) { return a.y - b.y || a.x - b.x; })
+      .map(function (b) { return [b.x, b.y, b.w, b.h, b.widget]; });
+    assert.deepStrictEqual(pkjs, page, p.key);
+  });
+  var s = syntheticSettings();
+  assert.deepStrictEqual(protocol.pixelLayout(s).map(function (b) { return [b.x, b.y, b.w, b.h]; }),
+    plain(Layout.fromSaved(s).map(function (b) { return [b.x, b.y, b.w, b.h]; })));
 });
 
 test('weather off -> interval 0', function () {
@@ -361,8 +413,9 @@ test('missing fields fall back to page defaults', function () {
   assert.strictEqual(e.theme.accent, Widgets.toGColor8('#FF5500'));
   assert.strictEqual(e.theme.iconFill, Widgets.toGColor8('#FFFFFF'));
   assert.strictEqual(e.weatherInterval, 30);
-  assert.deepStrictEqual(e.flags, { clock24: true, metric: true, btVibe: true, lineOn: false });
-  assert.deepStrictEqual(e.grid, protocol.DEFAULT_GRID);
+  assert.deepStrictEqual(e.flags, { clock24: true, metric: true, btVibe: true, lineOn: false, labels: true });
+  assert.deepStrictEqual(c.blocks.map(function (b) { return [b.x, b.y, b.w, b.h]; }),
+    [[0, 0, 158, 228], [158, 0, 42, 57], [158, 57, 42, 57], [158, 114, 42, 57], [158, 171, 42, 57]]);
 });
 
 test('invalid input is normalized', function () {
@@ -373,7 +426,8 @@ test('invalid input is normalized', function () {
     general: { weatherInterval: 1000, clock24: 'false' }
   };
   var c = decodeConfig(protocol.encodeConfig(s));
-  assert.deepStrictEqual(c.grid, { cols: [50, 50, 50, 50], rows: [57, 57, 57, 57] });
+  // an invalid grid is even; here one block covers it all
+  assert.deepStrictEqual([c.blocks[0].x, c.blocks[0].y, c.blocks[0].w, c.blocks[0].h], [0, 0, 200, 228]);
   assert.strictEqual(c.blocks[0].id, 0);
   assert.strictEqual(c.blocks[0].align, 'center');
   assert.deepStrictEqual([c.blocks[0].bg, c.blocks[0].fg], [0, 0]);

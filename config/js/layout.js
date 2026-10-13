@@ -1,16 +1,22 @@
 /*
- * Layout grid model.
+ * Layout model.
  *
- * The screen is divided into COLS×ROWS cells. A layout is an array of blocks
- * {id, x, y, w, h, widget, opts, bg, fg, accent, iconFill} that cover
- * every cell exactly once. Merging and splitting always
- * preserve this invariant.
+ * A layout is an array of blocks {id, x, y, w, h, widget, opts, bg, fg,
+ * accent, iconFill}: rectangles in screen pixels that tile the 200×228
+ * screen, every pixel covered exactly once, no side shorter than MIN.
+ * Merging, splitting and moving an edge always preserve this invariant.
+ *
+ * Saved settings before version 2 (and the built-in presets) describe
+ * blocks in the cells of a 4×4 grid with column widths and row heights
+ * {cols, rows}; fromSaved() turns them into pixels.
  */
 (function (root) {
   'use strict';
 
-  var COLS = 4;
-  var ROWS = 4;
+  var SCREEN = { w: 200, h: 228 };
+  var MIN = 20;          // shortest block side, px
+  var MAX_BLOCKS = 16;   // CONFIG_MAX_BLOCKS in src/c/protocol.h
+  var GRID_N = 4;        // cells per side of the old grid
 
   var nextId = 1;
   function uid() {
@@ -34,16 +40,6 @@
     return b;
   }
 
-  function makeEmpty() {
-    var blocks = [];
-    for (var y = 0; y < ROWS; y++) {
-      for (var x = 0; x < COLS; x++) {
-        blocks.push(makeBlock(x, y, 1, 1));
-      }
-    }
-    return blocks;
-  }
-
   function sortBlocks(blocks) {
     return blocks.sort(function (a, b) {
       return a.y - b.y || a.x - b.x;
@@ -52,12 +48,6 @@
 
   function rectOf(b) {
     return { x: b.x, y: b.y, w: b.w, h: b.h };
-  }
-
-  function rectFromCells(x1, y1, x2, y2) {
-    var x = Math.min(x1, x2);
-    var y = Math.min(y1, y2);
-    return { x: x, y: y, w: Math.abs(x2 - x1) + 1, h: Math.abs(y2 - y1) + 1 };
   }
 
   function intersects(a, b) {
@@ -104,17 +94,11 @@
     });
   }
 
-  function blockAt(blocks, cx, cy) {
+  // The block under a screen point
+  function blockAt(blocks, px, py) {
     for (var i = 0; i < blocks.length; i++) {
       var b = blocks[i];
-      if (cx >= b.x && cx < b.x + b.w && cy >= b.y && cy < b.y + b.h) return b;
-    }
-    return null;
-  }
-
-  function findById(blocks, id) {
-    for (var i = 0; i < blocks.length; i++) {
-      if (blocks[i].id === id) return blocks[i];
+      if (px >= b.x && px < b.x + b.w && py >= b.y && py < b.y + b.h) return b;
     }
     return null;
   }
@@ -147,59 +131,184 @@
     return { blocks: sortBlocks(rest), merged: merged };
   }
 
-  // Splits a block into 1×1 cells. The widget stays in the top-left one
-  // if it fits there: the caller decides via fits(widget, cellRect).
-  function split(blocks, id, fits) {
-    var target = findById(blocks, id);
-    if (!target || target.w * target.h === 1) return { blocks: blocks, first: target };
-
-    var rest = blocks.filter(function (b) { return b !== target; });
-    var first = null;
-    for (var y = target.y; y < target.y + target.h; y++) {
-      for (var x = target.x; x < target.x + target.w; x++) {
-        var isFirst = first === null;
-        var keep = isFirst && (!fits || fits(target.widget, { x: target.x, y: target.y, w: 1, h: 1 }));
-        var cell = makeBlock(x, y, 1, 1, keep ? target.widget : 'empty', {
-          opts: keep ? clone(target.opts) : {},
-          bg: target.bg,
-          fg: target.fg,
-          accent: target.accent,
-          iconFill: target.iconFill
-        });
-        if (isFirst) first = cell;
-        rest.push(cell);
-      }
-    }
-    return { blocks: sortBlocks(rest), first: first };
+  // Whether a block can be cut in two halves side by side (vertical cut) or
+  // one above the other
+  function canSplit(blocks, b, vertical) {
+    return blocks.length < MAX_BLOCKS && (vertical ? b.w : b.h) >= 2 * MIN;
   }
 
-  // Checks that the blocks cover the grid exactly once.
-  function validate(blocks) {
-    var seen = new Array(COLS * ROWS);
-    for (var i = 0; i < blocks.length; i++) {
-      var b = blocks[i];
-      if (b.w < 1 || b.h < 1 || b.x < 0 || b.y < 0 ||
-          b.x + b.w > COLS || b.y + b.h > ROWS) {
-        return false;
-      }
-      for (var y = b.y; y < b.y + b.h; y++) {
-        for (var x = b.x; x < b.x + b.w; x++) {
-          var k = y * COLS + x;
-          if (seen[k]) return false;
-          seen[k] = true;
+  // Cuts a block in two halves. The widget stays in the first (left or top)
+  // half if it fits there: the caller decides via fits(widget, rect).
+  function split(blocks, id, vertical, fits) {
+    var target = findById(blocks, id);
+    if (!target || !canSplit(blocks, target, vertical)) return { blocks: blocks, first: target };
+
+    var a = rectOf(target), c = rectOf(target);
+    if (vertical) {
+      a.w = Math.floor(target.w / 2);
+      c.x = target.x + a.w;
+      c.w = target.w - a.w;
+    } else {
+      a.h = Math.floor(target.h / 2);
+      c.y = target.y + a.h;
+      c.h = target.h - a.h;
+    }
+    var keep = !fits || fits(target.widget, a);
+    var halves = [a, c].map(function (r, i) {
+      var stays = i === 0 && keep;
+      return makeBlock(r.x, r.y, r.w, r.h, stays ? target.widget : 'empty', {
+        opts: stays ? clone(target.opts) : {},
+        bg: target.bg,
+        fg: target.fg,
+        accent: target.accent,
+        iconFill: target.iconFill
+      });
+    });
+    var rest = blocks.filter(function (b) { return b !== target; }).concat(halves);
+    return { blocks: sortBlocks(rest), first: halves[0] };
+  }
+
+  // --- edges ------------------------------------------------------------
+  //
+  // An edge is a piece of the line between blocks that can move on its own:
+  // starting from one block's side, it grows along the line until every block
+  // touching it from either side lies within it, so moving it keeps all
+  // blocks rectangular. {vertical, at, from, to, before, after}: before are
+  // the blocks on the left (above), after on the right (below).
+
+  function span(b, vertical) {
+    return vertical ? [b.y, b.y + b.h] : [b.x, b.x + b.w];
+  }
+
+  function edgeFrom(blocks, vertical, at, from, to) {
+    var before, after, changed = true;
+    while (changed) {
+      changed = false;
+      before = [];
+      after = [];
+      for (var i = 0; i < blocks.length; i++) {
+        var b = blocks[i];
+        var s = span(b, vertical);
+        if (s[1] <= from || s[0] >= to) continue;
+        var start = vertical ? b.x : b.y, end = start + (vertical ? b.w : b.h);
+        if (end === at) before.push(b);
+        else if (start === at) after.push(b);
+        else continue;
+        if (s[0] < from || s[1] > to) {
+          from = Math.min(from, s[0]);
+          to = Math.max(to, s[1]);
+          changed = true;
         }
       }
     }
-    for (var j = 0; j < seen.length; j++) {
-      if (!seen[j]) return false;
-    }
-    return true;
+    return { vertical: vertical, at: at, from: from, to: to, before: before, after: after };
   }
 
-  // Takes blocks from saved settings/presets and assigns fresh ids.
-  function hydrate(list) {
-    var blocks = list.map(function (b) {
-      return makeBlock(b.x, b.y, b.w, b.h, b.widget, {
+  // Every movable edge, each once (right and bottom sides inside the screen)
+  function edges(blocks) {
+    var out = [], seen = {};
+    blocks.forEach(function (b) {
+      [true, false].forEach(function (vertical) {
+        var at = vertical ? b.x + b.w : b.y + b.h;
+        if (at >= (vertical ? SCREEN.w : SCREEN.h)) return;
+        var s = span(b, vertical);
+        var e = edgeFrom(blocks, vertical, at, s[0], s[1]);
+        var key = edgeKey(e);
+        if (seen[key]) return;
+        seen[key] = true;
+        out.push(e);
+      });
+    });
+    return out;
+  }
+
+  function edgeKey(e) {
+    return (e.vertical ? 'v' : 'h') + e.at + ':' + e.from + '-' + e.to;
+  }
+
+  // Where the edge may go: every block on both sides keeps MIN
+  function edgeRange(e) {
+    var lo = -Infinity, hi = Infinity;
+    e.before.forEach(function (b) { lo = Math.max(lo, (e.vertical ? b.x : b.y) + MIN); });
+    e.after.forEach(function (b) { hi = Math.min(hi, (e.vertical ? b.x + b.w : b.y + b.h) - MIN); });
+    return [lo, hi];
+  }
+
+  // Moves an edge (found in blocks) to pos, clamped to edgeRange. Returns new
+  // blocks, the moved edge's blocks replaced by resized copies.
+  function moveEdge(blocks, e, pos) {
+    var r = edgeRange(e);
+    var p = Math.round(Math.max(r[0], Math.min(r[1], pos)));
+    return blocks.map(function (b) {
+      var i = e.before.indexOf(b) !== -1, j = e.after.indexOf(b) !== -1;
+      if (!i && !j) return b;
+      var c = Object.assign({}, b);
+      if (e.vertical) {
+        if (i) c.w = p - b.x;
+        else { c.w = b.x + b.w - p; c.x = p; }
+      } else {
+        if (i) c.h = p - b.y;
+        else { c.h = b.y + b.h - p; c.y = p; }
+      }
+      return c;
+    });
+  }
+
+  // --- validation and saved settings ----------------------------------------
+
+  // Checks that the blocks tile the screen: integers, sides >= MIN, inside the
+  // screen, no overlaps, and together exactly the screen's area.
+  function validate(blocks) {
+    if (!blocks.length || blocks.length > MAX_BLOCKS) return false;
+    var area = 0;
+    for (var i = 0; i < blocks.length; i++) {
+      var b = blocks[i];
+      if ([b.x, b.y, b.w, b.h].some(function (v) { return typeof v !== 'number' || v !== Math.round(v); })) return false;
+      if (b.w < MIN || b.h < MIN || b.x < 0 || b.y < 0 || b.x + b.w > SCREEN.w || b.y + b.h > SCREEN.h) return false;
+      for (var j = 0; j < i; j++) {
+        if (intersects(b, blocks[j])) return false;
+      }
+      area += b.w * b.h;
+    }
+    return area === SCREEN.w * SCREEN.h;
+  }
+
+  function evenTracks(total, n) {
+    var out = [];
+    for (var i = 0; i < n; i++) out.push(Math.floor(total * (i + 1) / n) - Math.floor(total * i / n));
+    return out;
+  }
+
+  // Old grid tracks, or even ones if they are not valid
+  function tracks(arr, total) {
+    var ok = Array.isArray(arr) && arr.length === GRID_N && arr.every(function (v) {
+      return typeof v === 'number' && v === Math.round(v) && v >= MIN;
+    }) && arr.reduce(function (s, v) { return s + v; }, 0) === total;
+    return ok ? arr : evenTracks(total, GRID_N);
+  }
+
+  function offsets(arr) {
+    var out = [0];
+    for (var i = 0; i < arr.length; i++) out.push(out[i] + arr[i]);
+    return out;
+  }
+
+  // Blocks from saved settings, a user layout or a preset ({v, layout, grid}),
+  // with fresh ids; null if they don't tile the screen. Before version 2
+  // blocks are in grid cells.
+  function fromSaved(cfg) {
+    if (!cfg || !Array.isArray(cfg.layout)) return null;
+    var cells = !(cfg.v >= 2);
+    var g = cfg.grid || {};
+    var ox = offsets(tracks(g.cols, SCREEN.w)), oy = offsets(tracks(g.rows, SCREEN.h));
+    var blocks = cfg.layout.map(function (b) {
+      var r = { x: b.x, y: b.y, w: b.w, h: b.h };
+      if (cells) {
+        var x1 = b.x + b.w, y1 = b.y + b.h;
+        if (![b.x, b.y, x1, y1].every(function (v) { return v >= 0 && v <= GRID_N && v === Math.round(v); })) return null;
+        r = { x: ox[b.x], y: oy[b.y], w: ox[x1] - ox[b.x], h: oy[y1] - oy[b.y] };
+      }
+      return makeBlock(r.x, r.y, r.w, r.h, b.widget, {
         opts: clone(b.opts || {}),
         bg: b.bg || null,
         fg: b.fg || null,
@@ -207,6 +316,7 @@
         iconFill: b.iconFill || null
       });
     });
+    if (blocks.some(function (b) { return !b; })) return null;
     return validate(blocks) ? sortBlocks(blocks) : null;
   }
 
@@ -222,24 +332,38 @@
     });
   }
 
+  function findById(blocks, id) {
+    for (var i = 0; i < blocks.length; i++) {
+      if (blocks[i].id === id) return blocks[i];
+    }
+    return null;
+  }
+
   function clone(o) {
     return JSON.parse(JSON.stringify(o));
   }
 
   root.Layout = {
-    COLS: COLS,
-    ROWS: ROWS,
-    makeEmpty: makeEmpty,
-    rectFromCells: rectFromCells,
+    SCREEN: SCREEN,
+    MIN: MIN,
+    MAX_BLOCKS: MAX_BLOCKS,
+    GRID_N: GRID_N,
+    evenTracks: evenTracks,
     rectOf: rectOf,
+    union: union,
     expandRect: expandRect,
     blocksInRect: blocksInRect,
     blockAt: blockAt,
     findById: findById,
     merge: merge,
+    canSplit: canSplit,
     split: split,
+    edges: edges,
+    edgeKey: edgeKey,
+    edgeRange: edgeRange,
+    moveEdge: moveEdge,
     validate: validate,
-    hydrate: hydrate,
+    fromSaved: fromSaved,
     serialize: serialize,
     clone: clone
   };

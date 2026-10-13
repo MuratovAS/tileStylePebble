@@ -1,5 +1,5 @@
 /*
- * TileStyle: a 4x4 grid of blocks, each showing a widget. The drawing logic
+ * TileStyle: blocks tiling the screen, each showing a widget. The drawing logic
  * mirrors the settings page preview (config/js/raster.js, widgets.js).
  */
 #include <pebble.h>
@@ -125,12 +125,6 @@ static void background_update(Layer *layer, GContext *ctx) {
   graphics_fill_rect(ctx, layer_get_bounds(layer), 0, GCornerNone);
 }
 
-static int track_offset(const uint8_t *tracks, int i) {
-  int o = 0;
-  for (int k = 0; k < i; k++) o += tracks[k];
-  return o;
-}
-
 // Segment along an axis from `from` to `to` (exclusive) at cross coordinate
 // `at`; dashes and dots are counted from the screen origin
 static void line_span(GContext *ctx, int from, int to, int at, bool horiz) {
@@ -164,14 +158,9 @@ static void lines_update(Layer *layer, GContext *ctx) {
   graphics_context_set_fill_color(ctx, color8(s->line_color ? s->line_color : s->fg));
   for (int i = 0; i < s->count; i++) {
     const BlockConfig *b = &s->blocks[i];
-    if (b->x + b->w < GRID_N) {
-      line_span(ctx, track_offset(s->rows, b->y), track_offset(s->rows, b->y + b->h),
-                track_offset(s->cols, b->x + b->w), false);
-    }
-    if (b->y + b->h < GRID_N) {
-      line_span(ctx, track_offset(s->cols, b->x), track_offset(s->cols, b->x + b->w),
-                track_offset(s->rows, b->y + b->h), true);
-    }
+    // every inner border is the right or bottom side of some block
+    if (b->x + b->w < SCREEN_W) line_span(ctx, b->y, b->y + b->h, b->x + b->w, false);
+    if (b->y + b->h < SCREEN_H) line_span(ctx, b->x, b->x + b->w, b->y + b->h, true);
   }
 }
 

@@ -12,29 +12,29 @@
  * (0b11rrggbb, Widgets.toGColor8 on the settings page). A color byte of 0
  * means "not set" (inherit): a real GColor8 always has the top bits set.
  *
- * --- Settings blob (version 3) -----------------------------------------
+ * --- Settings blob (version 4) -----------------------------------------
  *
  *   off size
- *    0   1  version = 3
- *    1   1  flags: bit0 clock24, bit1 metric, bit2 btVibe, bit3 lineOn
- *    2   4  grid.cols[4], px, sum 200
- *    6   4  grid.rows[4], px, sum 228
- *   10   1  theme.bg
- *   11   1  theme.tile      (0 = null: blocks have no own background)
- *   12   1  theme.fg
- *   13   1  theme.accent
- *   14   1  theme.iconFill  (0 = null: icon fill is the block background)
- *   15   1  theme.gap, px
- *   16   1  theme.radius, px
- *   17   1  theme.lineWidth, px
- *   18   1  theme.lineColor
- *   19   1  theme.lineStyle: 0 solid, 1 dashed, 2 dotted
- *   20   1  general.weatherInterval, minutes
- *   21   1  theme.font: text font, 0 Gothic (firmware), 1.. a family of
+ *    0   1  version = 4
+ *    1   1  flags: bit0 clock24, bit1 metric, bit2 btVibe, bit3 lineOn,
+ *             bit4 no labels (theme.labels off: no "steps", "bpm"... under values)
+ *    2   1  theme.bg
+ *    3   1  theme.tile      (0 = null: blocks have no own background)
+ *    4   1  theme.fg
+ *    5   1  theme.accent
+ *    6   1  theme.iconFill  (0 = null: icon fill is the block background)
+ *    7   1  theme.gap, px
+ *    8   1  theme.radius, px
+ *    9   1  theme.lineWidth, px
+ *   10   1  theme.lineColor
+ *   11   1  theme.lineStyle: 0 solid, 1 dashed, 2 dotted
+ *   12   1  general.weatherInterval, minutes
+ *   13   1  theme.font: text font, 0 Gothic (firmware), 1.. a family of
  *             tools/textfonts.py (TEXT_FONTS in src/pkjs/protocol.js)
- *   22   1  block count N (1..16)
- *   23      N blocks:
- *             x, y, w, h   4 bytes, in grid cells
+ *   14   1  block count N (1..16)
+ *   15      N blocks:
+ *             x, y, w, h   4 bytes, screen pixels. The blocks tile the
+ *                          200x228 screen: no overlaps, no holes.
  *             widget id    1 byte (WidgetId)
  *             bg, fg, accent, iconFill  4 bytes (0 = inherit from theme;
  *                          iconFill then falls back as theme.iconFill does)
@@ -63,9 +63,11 @@
  *   others      no options (L = 0)
  *
  * The watch must tolerate unknown widget ids (draw nothing) and longer
- * option payloads than it knows (skip by L). It also reads versions 1 and 2,
- * as stored by earlier releases: no theme.font byte (block count at 21,
- * blocks from 22), and in version 1 blocks have no iconFill byte.
+ * option payloads than it knows (skip by L). It also reads versions 1 to 3,
+ * as stored by earlier releases: blocks are in the cells of a 4x4 grid
+ * whose column widths and row heights (px, sums 200 and 228) follow the
+ * flags at 2..5 and 6..9, which moves the theme to 10..; versions 1 and 2
+ * have no theme.font byte, and in version 1 blocks have no iconFill byte.
  *
  * --- Weather blob (version 1) ------------------------------------------
  *
@@ -132,7 +134,7 @@ typedef enum {
   WEATHER_CONDITION_COUNT
 } WeatherCondition;
 
-#define CONFIG_VERSION 3   // settings blob
+#define CONFIG_VERSION 4   // settings blob
 #define WEATHER_VERSION 1  // weather blob
 #define CONFIG_MAX_BLOCKS 16
 #define WEATHER_MAX_HOURLY 48

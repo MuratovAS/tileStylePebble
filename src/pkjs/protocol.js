@@ -11,15 +11,14 @@
  */
 'use strict';
 
-var CONFIG_VERSION = 3;  // settings blob
+var CONFIG_VERSION = 4;  // settings blob
 var WEATHER_VERSION = 1; // weather blob
 var MAX_BLOCKS = 16;
 var MAX_HOURLY = 48;
-var COLS = 4;
-var ROWS = 4;
+var GRID_N = 4;     // cells per side of the grid of settings before v2
 var SCREEN_W = 200;
 var SCREEN_H = 228;
-var MIN_TRACK = 20;
+var MIN_SIDE = 20;  // layout.js MIN: shortest block side
 
 // Theme text fonts in protocol order: the firmware's Gothic, then the families
 // of tools/textfonts.py (config/js/textfonts/index.js, src/c/gen_textfonts.h)
@@ -32,7 +31,7 @@ var TEXT_FONTS = ['gothic', 'roboto', 'roboto_condensed', 'fira', 'ubuntu', 'bar
 var THEME_DEFAULTS = {
   bg: '#000000', tile: null, fg: '#FFFFFF', accent: '#FF5500', iconFill: '#FFFFFF',
   gap: 0, radius: 0,
-  lineOn: false, lineWidth: 1, lineColor: '#FFFFFF', lineStyle: 'solid', font: 'gothic'
+  lineOn: false, lineWidth: 1, lineColor: '#FFFFFF', lineStyle: 'solid', font: 'gothic', labels: true
 };
 
 // config.js DEFAULT_GENERAL (weather location fields are phone-only)
@@ -41,8 +40,9 @@ var GENERAL_DEFAULTS = {
   weatherSource: 'gps', weatherLat: null, weatherLon: null, weatherInterval: 30
 };
 
-// the "timestyle" preset (config.js DEFAULT_PRESET): used when the layout is missing or invalid,
-// as the page does. The watch uses the same layout before the first config.
+// the "timestyle" preset (config.js DEFAULT_PRESET), in grid cells: used when
+// the layout is missing or invalid, as the page does. The watch uses the same
+// layout before the first config.
 var ORANGE = { bg: '#FF5500', fg: '#000000', accent: '#000000' };
 function side(y, widget, opts) {
   return { x: 3, y: y, w: 1, h: 1, widget: widget, opts: opts || {},
@@ -169,15 +169,13 @@ function i8(v) { return v < 0 ? v + 256 : v; }
 
 // --- settings normalization ------------------------------------------------
 
-// widgets.js normalizeGrid: each track an integer >= 20, sums 200 / 228
-function tracks(arr, n, total) {
-  if (!Array.isArray(arr) || arr.length !== n) return null;
-  var sum = 0;
-  for (var i = 0; i < n; i++) {
-    if (typeof arr[i] !== 'number' || arr[i] !== Math.round(arr[i]) || arr[i] < MIN_TRACK) return null;
-    sum += arr[i];
-  }
-  return sum === total ? arr.slice() : null;
+// layout.js: grid tracks of settings before v2, each an integer >= 20,
+// sums 200 / 228; invalid ones are even
+function tracks(arr, total) {
+  var ok = Array.isArray(arr) && arr.length === GRID_N && arr.every(function (v) {
+    return typeof v === 'number' && v === Math.round(v) && v >= MIN_SIDE;
+  }) && arr.reduce(function (s, v) { return s + v; }, 0) === total;
+  return ok ? arr : evenSplit(total, GRID_N);
 }
 
 function evenSplit(total, n) {
@@ -186,37 +184,59 @@ function evenSplit(total, n) {
   return out;
 }
 
-function normalizeGrid(g) {
-  g = isObj(g) ? g : {};
-  return {
-    cols: tracks(g.cols, COLS, SCREEN_W) || evenSplit(SCREEN_W, COLS),
-    rows: tracks(g.rows, ROWS, SCREEN_H) || evenSplit(SCREEN_H, ROWS)
-  };
+function offsets(arr) {
+  var out = [0];
+  for (var i = 0; i < arr.length; i++) out.push(out[i] + arr[i]);
+  return out;
 }
 
-// layout.js validate: blocks cover the 4x4 grid exactly once
-function layoutValid(list) {
-  if (!Array.isArray(list) || list.length < 1 || list.length > MAX_BLOCKS) return false;
-  var seen = [];
+function isInt(v) { return typeof v === 'number' && v === Math.round(v); }
+
+// layout.js validate: blocks tile the screen (sides >= MIN_SIDE, no overlaps,
+// the screen's area in total)
+function tilesScreen(list) {
+  if (list.length < 1 || list.length > MAX_BLOCKS) return false;
+  var area = 0;
   for (var i = 0; i < list.length; i++) {
     var b = list[i];
-    if (!isObj(b)) return false;
-    var x = b.x, y = b.y, w = b.w, h = b.h;
-    if ([x, y, w, h].some(function (v) { return typeof v !== 'number' || v !== Math.round(v); })) return false;
-    if (w < 1 || h < 1 || x < 0 || y < 0 || x + w > COLS || y + h > ROWS) return false;
-    for (var yy = y; yy < y + h; yy++) {
-      for (var xx = x; xx < x + w; xx++) {
-        if (seen[yy * COLS + xx]) return false;
-        seen[yy * COLS + xx] = true;
-      }
+    if (![b.x, b.y, b.w, b.h].every(isInt)) return false;
+    if (b.w < MIN_SIDE || b.h < MIN_SIDE || b.x < 0 || b.y < 0 || b.x + b.w > SCREEN_W || b.y + b.h > SCREEN_H) return false;
+    for (var j = 0; j < i; j++) {
+      var o = list[j];
+      if (b.x < o.x + o.w && o.x < b.x + b.w && b.y < o.y + o.h && o.y < b.y + b.h) return false;
     }
+    area += b.w * b.h;
   }
-  for (var k = 0; k < COLS * ROWS; k++) if (!seen[k]) return false;
-  return true;
+  return area === SCREEN_W * SCREEN_H;
 }
 
+// layout.js fromSaved: the blocks of settings in screen pixels, or null if
+// they don't tile the screen. Before v2 blocks are in the cells of a 4x4 grid
+// {cols, rows}.
+function pixelLayout(cfg) {
+  if (!isObj(cfg) || !Array.isArray(cfg.layout)) return null;
+  var cells = !(cfg.v >= 2);
+  var g = isObj(cfg.grid) ? cfg.grid : {};
+  var ox = offsets(tracks(g.cols, SCREEN_W)), oy = offsets(tracks(g.rows, SCREEN_H));
+  var out = [];
+  for (var i = 0; i < cfg.layout.length; i++) {
+    var b = cfg.layout[i];
+    if (!isObj(b) || ![b.x, b.y, b.w, b.h].every(isInt)) return null;
+    var r = { x: b.x, y: b.y, w: b.w, h: b.h };
+    if (cells) {
+      var x1 = b.x + b.w, y1 = b.y + b.h;
+      if (![b.x, b.y, x1, y1].every(function (v) { return v >= 0 && v <= GRID_N; })) return null;
+      r = { x: ox[b.x], y: oy[b.y], w: ox[x1] - ox[b.x], h: oy[y1] - oy[b.y] };
+    }
+    out.push(Object.assign({}, b, r));
+  }
+  return tilesScreen(out) ? out : null;
+}
+
+var DEFAULT_PIXELS = pixelLayout({ layout: DEFAULT_LAYOUT, grid: DEFAULT_GRID });
+
 function layoutOf(cfg) {
-  var list = isObj(cfg) && layoutValid(cfg.layout) ? cfg.layout : DEFAULT_LAYOUT;
+  var list = pixelLayout(cfg) || DEFAULT_PIXELS;
   return list.slice().sort(function (a, b) { return a.y - b.y || a.x - b.x; });
 }
 
@@ -301,7 +321,7 @@ function alignOf(widget, o) {
 }
 
 /*
- * Settings JSON (object or string) -> settings blob v3 (array of bytes).
+ * Settings JSON (object or string) -> settings blob v4 (array of bytes).
  */
 function encodeConfig(cfg) {
   if (typeof cfg === 'string') cfg = JSON.parse(cfg);
@@ -309,16 +329,13 @@ function encodeConfig(cfg) {
   var t = isObj(cfg.theme) ? cfg.theme : {};
   var g = isObj(cfg.general) ? cfg.general : {};
   var D = THEME_DEFAULTS, G = GENERAL_DEFAULTS;
-  // as the page's loadInitial: no grid -> the "timestyle" grid, invalid -> even
-  var grid = cfg.grid ? normalizeGrid(cfg.grid) : DEFAULT_GRID;
 
   var out = [CONFIG_VERSION];
   out.push((bool(g.clock24, G.clock24) ? 1 : 0) |
     (bool(g.metric, G.metric) ? 2 : 0) |
     (bool(g.btVibe, G.btVibe) ? 4 : 0) |
-    (bool(t.lineOn, D.lineOn) ? 8 : 0));
-  out.push.apply(out, grid.cols);
-  out.push.apply(out, grid.rows);
+    (bool(t.lineOn, D.lineOn) ? 8 : 0) |
+    (bool(t.labels, D.labels) ? 0 : 16));
   out.push(
     color(t.bg, D.bg, false),
     color(t.tile, D.tile, true),
@@ -407,6 +424,7 @@ module.exports = {
   GENERAL_DEFAULTS: GENERAL_DEFAULTS,
   DEFAULT_LAYOUT: DEFAULT_LAYOUT,
   DEFAULT_GRID: DEFAULT_GRID,
+  pixelLayout: pixelLayout,
   MAX_DATE_PATTERN: MAX_DATE_PATTERN,
   MAX_TZ_LABEL: MAX_TZ_LABEL,
   MAX_TEXT: MAX_TEXT,

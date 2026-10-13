@@ -31,16 +31,16 @@
       'Cancel': 'Отмена',
       'Save': 'Сохранить',
       'Language': 'Язык',
-      'Grid 4×4': 'Сетка 4×4',
+      'Blocks': 'Блоки',
       'Undo': 'Отменить',
       'Merge': 'Объединить',
       'Split': 'Разделить',
-      'Even out': 'Поровну',
-      'Make all columns and rows the same size': 'Сделать все столбцы и строки одинаковыми',
+      'Split left and right': 'Разделить на левый и правый',
+      'Split top and bottom': 'Разделить на верхний и нижний',
       'Grid': 'Сетка',
-      'Tap a block to choose its widget. Drag across several cells to select and merge them. The handles on the frame change column widths and row heights.':
-        'Нажмите на блок, чтобы выбрать виджет. Проведите по нескольким ячейкам, чтобы выделить и объединить их. ' +
-        'Ручки на рамке меняют ширину столбцов и высоту строк.',
+      'Tap a block to choose its widget. Drag across several blocks to select and merge them. Drag the handles on the borders to resize blocks: a border moves only between the blocks along it.':
+        'Нажмите на блок, чтобы выбрать виджет. Проведите по нескольким блокам, чтобы выделить и объединить их. ' +
+        'Тяните ручки на границах, чтобы менять размеры: граница двигается только между блоками вдоль неё.',
       'Layouts': 'Готовые раскладки',
       'My layouts': 'Мои раскладки',
       'Save current': 'Сохранить текущую',
@@ -54,6 +54,7 @@
       'Icon fill': 'Заливка иконок',
       'Same as block': 'Как фон блока',
       'Text font': 'Шрифт текста',
+      'Labels in blocks (steps, bpm…)': 'Подписи в блоках (steps, bpm…)',
       'Gothic (system)': 'Gothic (системный)',
       'Gap between blocks': 'Отступ между блоками',
       'Corner radius': 'Скругление углов',
@@ -92,25 +93,23 @@
       'Same as theme': 'Как в теме',
 
       // --- editor (config.js) ---
-      'Column border {n}': 'Граница столбцов {n}',
-      'Row border {n}': 'Граница строк {n}',
+      'Border between blocks, x {at}': 'Граница между блоками, x {at}',
+      'Border between blocks, y {at}': 'Граница между блоками, y {at}',
       'theme': 'тема',
       'same as block': 'как фон блока',
       'same as screen': 'как фон',
       'Block': 'Блок',
       'Select a block on the watch face.': 'Выберите блок на циферблате.',
       'Blocks selected: {n}': 'Выделено блоков: {n}',
-      'Area {w}×{h}. The merged block gets the widget of the largest non-empty block.':
-        'Область {w}×{h}. Объединённый блок получит виджет самого крупного непустого блока.',
+      'Area {w}×{h} px. The merged block gets the widget of the largest non-empty block.':
+        'Область {w}×{h} px. Объединённый блок получит виджет самого крупного непустого блока.',
       'Merge into one block': 'Объединить в один блок',
       'Pick a widget': 'Выбрать виджет',
       'Background': 'Фон',
       'Accent': 'Акцент',
-      '{w}×{h} cells · {pw}×{ph} px': '{w}×{h} ячеек · {pw}×{ph} px',
-      'The block is smaller than the widget needs ({min} px). Make the block bigger or change the grid proportions.':
-        'Блок меньше, чем нужно виджету ({min} px). Увеличьте блок или измените пропорции сетки.',
+      'The block is smaller than the widget needs ({min} px). Make the block bigger: drag its borders or merge it with a neighbor.':
+        'Блок меньше, чем нужно виджету ({min} px). Увеличьте блок: потяните его границы или объедините с соседним.',
       'Block colors': 'Цвета блока',
-      'Split into cells': 'Разделить на ячейки',
       'Clear': 'Очистить',
       'Widget for a {w}×{h} px block': 'Виджет для блока {w}×{h} px',
       'Needs a block of at least {min} px': 'Нужен блок от {min} px',

@@ -550,7 +550,7 @@
     };
   }
 
-  // s = {blocks, grid, theme, general, now}
+  // s = {blocks (layout.js, screen pixels), theme, general, now}
   function drawScreen(canvas, s) {
     var font = s.theme.font || 'gothic';
     if (font !== 'gothic' && !familyFonts(font)) {
@@ -576,7 +576,7 @@
     ctx.fillRect(0, 0, W.SCREEN.w, W.SCREEN.h);
 
     s.blocks.forEach(function (b) {
-      var px = W.blockPixels(b, s.theme.gap, s.grid);
+      var px = W.blockPixels(b, s.theme.gap);
       if (px.w <= 0 || px.h <= 0) return;
       var c = blockColors(b, s.theme);
 
@@ -595,7 +595,7 @@
           w: px.w, h: px.h,
           opts: opts,
           c: c, now: now, L: W.LANG, mock: W.MOCK,
-          metric: s.general.metric, clock12: !s.general.clock24
+          metric: s.general.metric, clock12: !s.general.clock24, labels: s.theme.labels !== false
         });
       } catch (err) {
         console.error('Widget preview error', b.widget, err);
@@ -603,19 +603,17 @@
       ctx.restore();
     });
 
-    if (s.theme.lineOn) drawBlockLines(ctx, s.blocks, s.grid, s.theme);
+    if (s.theme.lineOn) drawBlockLines(ctx, s.blocks, s.theme);
 
     quantize(ctx, W.SCREEN.w, W.SCREEN.h);
   }
 
   // Lines along inner block borders (none along the screen edge). A border
-  // is a grid line, so with a gap between blocks the line runs through its
-  // middle. Dashes and dots are counted from the screen origin so that the
-  // strokes of adjacent segments line up.
-  function drawBlockLines(ctx, blocks, grid, t) {
-    var W = root.Widgets;
-    var ox = W.offsets(grid.cols), oy = W.offsets(grid.rows);
-    var cols = grid.cols.length, rows = grid.rows.length;
+  // is where two blocks meet, so with a gap between blocks the line runs
+  // through its middle. Dashes and dots are counted from the screen origin so
+  // that the strokes of adjacent segments line up.
+  function drawBlockLines(ctx, blocks, t) {
+    var S = root.Widgets.SCREEN;
     var lw = Number(t.lineWidth) || 1;
     var shift = -Math.floor(lw / 2);
     var style = t.lineStyle || 'solid';
@@ -644,9 +642,10 @@
       }
     }
 
+    // every inner border is the right or bottom side of some block
     blocks.forEach(function (b) {
-      if (b.x + b.w < cols) span(oy[b.y], oy[b.y + b.h], ox[b.x + b.w], false);
-      if (b.y + b.h < rows) span(ox[b.x], ox[b.x + b.w], oy[b.y + b.h], true);
+      if (b.x + b.w < S.w) span(b.y, b.y + b.h, b.x + b.w, false);
+      if (b.y + b.h < S.h) span(b.x, b.x + b.w, b.y + b.h, true);
     });
   }
 

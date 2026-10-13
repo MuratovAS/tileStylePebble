@@ -241,8 +241,10 @@ static void draw_icon_spec(const G *g, const IconSpec *ic, int x, int y, int siz
 }
 
 // Standard "icon + value (+ label)" layout: stacked in square and tall
-// blocks, in a row in wide ones. label may be NULL or "".
+// blocks, in a row in wide ones. label may be NULL or ""; the theme can turn
+// labels off.
 static void metric(const Box *box, const G *g, IconSpec ic, const char *value, const char *label) {
+  if (g_settings.no_labels) label = NULL;
   int w = g->w, h = g->h, pad = 4;
   GColor fg = box->fg, accent = box->accent;
   bool has_label = label && *label;

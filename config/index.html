@@ -27,21 +27,21 @@
       <div class="screen-area">
         <div class="screen-wrap" id="screenWrap">
           <canvas class="screen" id="screen" width="200" height="228"></canvas>
-          <div class="overlay" id="overlay" aria-label="Grid 4×4" data-i18n-aria-label></div>
+          <div class="overlay" id="overlay" aria-label="Blocks" data-i18n-aria-label></div>
         </div>
         <div class="handles" id="handles"></div>
       </div>
     </div>
 
     <div class="toolbar">
-      <button type="button" class="btn" id="undoBtn" title="Undo" data-i18n-title>↶ <span data-i18n>Undo</span></button>
       <button type="button" class="btn btn-accent" id="mergeBtn" data-i18n>Merge</button>
-      <button type="button" class="btn" id="splitBtn" data-i18n>Split</button>
-      <button type="button" class="btn" id="gridEqualBtn" title="Make all columns and rows the same size" data-i18n-title data-i18n>Even out</button>
+      <button type="button" class="btn" id="splitVBtn" title="Split left and right" data-i18n-title>◫ <span data-i18n>Split</span></button>
+      <button type="button" class="btn" id="splitHBtn" title="Split top and bottom" data-i18n-title>⊟ <span data-i18n>Split</span></button>
       <label class="chip-toggle"><input type="checkbox" id="gridToggle" checked> <span data-i18n>Grid</span></label>
+      <button type="button" class="btn" id="undoBtn" title="Undo" data-i18n-title>↶ <span data-i18n>Undo</span></button>
     </div>
-    <p class="hint" data-i18n>Tap a block to choose its widget. Drag across several cells to select and merge them.
-      The handles on the frame change column widths and row heights.</p>
+    <p class="hint" data-i18n>Tap a block to choose its widget. Drag across several blocks to select and merge them.
+      Drag the handles on the borders to resize blocks: a border moves only between the blocks along it.</p>
     <ul class="warnings" id="warnings"></ul>
   </section>
 
@@ -93,6 +93,10 @@
         <select id="fontSelect" data-bind="theme.font">
           <option value="gothic" data-i18n>Gothic (system)</option>
         </select>
+      </div>
+      <div class="field">
+        <span data-i18n>Labels in blocks (steps, bpm…)</span>
+        <label class="switch"><input type="checkbox" data-bind="theme.labels"><i></i></label>
       </div>
       <div class="field">
         <span data-i18n>Gap between blocks</span>

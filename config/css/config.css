@@ -176,25 +176,27 @@ h3 { font-size: 13px; margin: 18px 0 8px; font-weight: 600; color: var(--muted);
 
 .screen-area { position: relative; }
 
-/* proportion handles on the watch frame */
+/* handles in the middle of the borders between blocks */
 .handles { position: absolute; inset: 0; pointer-events: none; }
 .gh {
   position: absolute;
   pointer-events: auto;
   padding: 0;
-  border: 0;
+  border: 1px solid #fff;
   border-radius: 6px;
   background: #6b7079;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .5);
   cursor: col-resize;
   touch-action: none;
+  transform: translate(-50%, -50%);
 }
 .gh::before {
   content: "";
   position: absolute;
   inset: -8px;
 }
-.gh-cols { top: -17px; width: 22px; height: 12px; transform: translateX(-50%); }
-.gh-rows { left: -17px; width: 12px; height: 22px; transform: translateY(-50%); cursor: row-resize; }
+.gh-v { width: 10px; height: 24px; }
+.gh-h { width: 24px; height: 10px; cursor: row-resize; }
 .gh:hover, .gh.active { background: var(--accent); }
 .gh span {
   position: absolute;
@@ -209,8 +211,8 @@ h3 { font-size: 13px; margin: 18px 0 8px; font-weight: 600; color: var(--muted);
   pointer-events: none;
   z-index: 2;
 }
-.gh-cols span { top: 20px; left: 50%; transform: translateX(-50%); }
-.gh-rows span { left: 20px; top: 50%; transform: translateY(-50%); }
+.gh-v span { top: 30px; left: 50%; transform: translateX(-50%); }
+.gh-h span { left: 30px; top: 50%; transform: translateY(-50%); }
 
 .overlay {
   position: absolute;

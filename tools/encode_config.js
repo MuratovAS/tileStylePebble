@@ -43,7 +43,8 @@ function loadPresets(file) {
 function clone(o) { return JSON.parse(JSON.stringify(o)); }
 
 // A preset as the page would save it right after picking it
-// (config.js applyPreset + buildConfig, default general settings).
+// (config.js applyPreset + buildConfig, default general settings): presets
+// are written in grid cells, saved settings have blocks in pixels.
 function presetSettings(p) {
   var theme = {};
   [protocol.THEME_DEFAULTS, p.theme || {}].forEach(function (src) {
@@ -51,10 +52,11 @@ function presetSettings(p) {
   });
   var general = clone(protocol.GENERAL_DEFAULTS);
   general.weatherLocation = '';
+  var layout = protocol.pixelLayout({ layout: clone(p.layout), grid: p.grid });
+  if (!layout) throw new Error('preset ' + p.key + ': the blocks do not tile the screen');
   return {
-    v: 1,
-    grid: p.grid ? clone(p.grid) : { cols: [50, 50, 50, 50], rows: [57, 57, 57, 57] },
-    layout: clone(p.layout),
+    v: 2,
+    layout: layout,
     theme: theme,
     general: general
   };

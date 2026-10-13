@@ -6,7 +6,6 @@
 #include <pebble.h>
 #include "protocol.h"
 
-#define GRID_N 4
 #define SCREEN_W 200
 #define SCREEN_H 228
 #define BLOCK_STR_MAX 100
@@ -17,7 +16,7 @@ typedef enum { ALIGN_CENTER = 0, ALIGN_LEFT = 1, ALIGN_RIGHT = 2 } Align;
 typedef enum { LINE_SOLID = 0, LINE_DASHED = 1, LINE_DOTTED = 2 } LineStyle;
 
 typedef struct {
-  uint8_t x, y, w, h;               // in grid cells
+  uint8_t x, y, w, h;               // screen pixels
   uint8_t widget;                   // WidgetId
   uint8_t bg, fg, accent, icon_fill;  // GColor8, 0 = inherit
   uint8_t align;                    // Align
@@ -29,8 +28,7 @@ typedef struct {
 } BlockConfig;
 
 typedef struct {
-  bool clock24, metric, bt_vibe, line_on;
-  uint8_t cols[GRID_N], rows[GRID_N];
+  bool clock24, metric, bt_vibe, line_on, no_labels;
   uint8_t bg, tile, fg, accent, icon_fill;  // tile/icon_fill 0 = null
   uint8_t gap, radius;
   uint8_t line_width, line_color, line_style;

@@ -1,9 +1,10 @@
 /*
- * Settings page: grid editor, block inspector, theme, general options.
+ * Settings page: layout editor, block inspector, theme, general options.
  *
- * State: state.blocks (layout), state.grid (grid proportions in px),
- * state.theme, state.general and state.sel, the selected rectangle in cells. The selection is stored as a
- * rectangle, not a block id: ids change on merge and undo.
+ * State: state.blocks (layout.js: blocks in screen pixels), state.theme,
+ * state.general and state.sel, the selected rectangle in pixels. The
+ * selection is stored as a rectangle, not a block id: ids change on merge
+ * and undo.
  */
 (function () {
   'use strict';
@@ -19,7 +20,8 @@
   var USER_PRESETS_KEY = 'tilestyle.presets';
   // keys from early versions, when the project was called pebbleWf
   var OLD_KEYS = [['pwf.settings', STORAGE_KEY], ['pwf.presets', USER_PRESETS_KEY]];
-  var CONFIG_VERSION = 1;
+  // 2: blocks in screen pixels; 1: in the cells of a 4×4 grid {cols, rows} (Layout.fromSaved)
+  var CONFIG_VERSION = 2;
   var HISTORY_LIMIT = 50;
 
   // Theme fields missing from old settings and from built-in layouts
@@ -28,6 +30,7 @@
     lineWidth: 1,
     lineColor: '#FFFFFF',
     lineStyle: 'solid', // solid | dashed | dotted
+    labels: true,       // labels under values: steps, bpm, kcal, km, UV
     font: 'gothic'      // text font: gothic or a family of js/textfonts
   };
 
@@ -52,7 +55,6 @@
 
   var state = {
     blocks: null,
-    grid: null,
     theme: null,
     general: null,
     sel: null,
@@ -112,8 +114,7 @@
   }
 
   function applyPreset(p) {
-    state.blocks = Layout.hydrate(p.layout) || Layout.hydrate(DEFAULT_PRESET.layout);
-    state.grid = W.normalizeGrid(p.grid, Layout.COLS, Layout.ROWS);
+    state.blocks = Layout.fromSaved(p) || Layout.fromSaved(DEFAULT_PRESET);
     if (p.theme) state.theme = fullTheme(p.theme);
   }
 
@@ -127,9 +128,8 @@
     if (!raw) return;
     try {
       var cfg = JSON.parse(raw);
-      var blocks = cfg.layout && Layout.hydrate(cfg.layout);
+      var blocks = Layout.fromSaved(cfg);
       if (blocks) state.blocks = blocks;
-      if (cfg.grid) state.grid = W.normalizeGrid(cfg.grid, Layout.COLS, Layout.ROWS);
       if (cfg.theme) state.theme = fullTheme(cfg.theme);
       if (cfg.general) {
         // take only known fields: old versions may have saved extra ones
@@ -147,7 +147,6 @@
   function buildConfig() {
     return {
       v: CONFIG_VERSION,
-      grid: clone(state.grid),
       layout: Layout.serialize(state.blocks).map(function (b) {
         var opts = W.resolveOpts(b.widget, b.opts);
         if (Object.keys(opts).length) b.opts = opts; else delete b.opts;
@@ -172,7 +171,7 @@
   // --- history and changes --------------------------------------------
 
   function snapshot() {
-    return clone({ blocks: state.blocks, grid: state.grid, theme: state.theme, general: state.general, sel: state.sel });
+    return clone({ blocks: state.blocks, theme: state.theme, general: state.general, sel: state.sel });
   }
 
   // Every change goes through commit so it can be undone.
@@ -196,7 +195,6 @@
     var prev = history.pop();
     if (!prev) return;
     state.blocks = prev.blocks;
-    state.grid = prev.grid;
     state.theme = prev.theme;
     state.general = prev.general;
     state.sel = prev.sel ? Layout.expandRect(state.blocks, prev.sel) : null;
@@ -243,21 +241,16 @@
     };
   }
 
-  function trackAt(arr, pos) {
-    var off = W.offsets(arr);
-    for (var i = 0; i < arr.length; i++) {
-      if (pos < off[i + 1]) return i;
-    }
-    return arr.length - 1;
-  }
-
-  function cellFromEvent(e) {
+  // The block under the pointer (the nearest one at the screen edge)
+  function blockFromEvent(e) {
     var p = screenPoint(e);
-    return { x: trackAt(state.grid.cols, p.x), y: trackAt(state.grid.rows, p.y) };
+    var x = Math.max(0, Math.min(W.SCREEN.w - 1, p.x)), y = Math.max(0, Math.min(W.SCREEN.h - 1, p.y));
+    return Layout.blockAt(state.blocks, x, y);
   }
 
-  function selectCells(a, b) {
-    state.sel = Layout.expandRect(state.blocks, Layout.rectFromCells(a.x, a.y, b.x, b.y));
+  // Selects the blocks between two blocks (and whatever that area cuts)
+  function selectBetween(a, b) {
+    state.sel = Layout.expandRect(state.blocks, Layout.union(a, b));
   }
 
   function bindOverlay() {
@@ -266,18 +259,19 @@
     overlay.addEventListener('pointerdown', function (e) {
       e.preventDefault();
       try { overlay.setPointerCapture(e.pointerId); } catch (err) { /* old webviews */ }
-      var c = cellFromEvent(e);
-      drag = { start: c, last: c, prev: state.sel };
-      selectCells(c, c);
+      var b = blockFromEvent(e);
+      if (!b) return;
+      drag = { start: b, last: b, prev: state.sel };
+      selectBetween(b, b);
       renderOverlay();
     });
 
     overlay.addEventListener('pointermove', function (e) {
       if (!drag) return;
-      var c = cellFromEvent(e);
-      if (c.x === drag.last.x && c.y === drag.last.y) return;
-      drag.last = c;
-      selectCells(drag.start, c);
+      var b = blockFromEvent(e);
+      if (!b || b === drag.last) return;
+      drag.last = b;
+      selectBetween(drag.start, b);
       renderOverlay();
     });
 
@@ -285,7 +279,7 @@
       if (!drag) return;
       // a plain click on the already selected area clears the selection
       var p = drag.prev, s = state.sel;
-      if (drag.last.x === drag.start.x && drag.last.y === drag.start.y && p && s &&
+      if (drag.last === drag.start && p && s &&
           p.x === s.x && p.y === s.y && p.w === s.w && p.h === s.h) {
         state.sel = null;
       }
@@ -296,7 +290,7 @@
     overlay.addEventListener('pointercancel', end);
   }
 
-  // --- grid actions ----------------------------------------------------
+  // --- layout actions --------------------------------------------------
 
   function mergeSelection() {
     if (selectedBlocks().length < 2) return;
@@ -307,12 +301,13 @@
     });
   }
 
-  function splitSelection() {
+  // vertical: into left and right halves, else top and bottom
+  function splitSelection(vertical) {
     var b = selectedBlock();
-    if (!b || b.w * b.h === 1) return;
+    if (!b || !Layout.canSplit(state.blocks, b, vertical)) return;
     commit(function () {
-      var res = Layout.split(state.blocks, b.id, function (key, cell) {
-        var px = blockPx(cell);
+      var res = Layout.split(state.blocks, b.id, vertical, function (key, half) {
+        var px = blockPx(half);
         return W.fits(key, px.w, px.h);
       });
       state.blocks = res.blocks;
@@ -332,7 +327,7 @@
   // --- screen rendering -----------------------------------------------
 
   function blockPx(b) {
-    return W.blockPixels(b, state.theme.gap, state.grid);
+    return W.blockPixels(b, state.theme.gap);
   }
 
   function blockFits(b, key) {
@@ -348,29 +343,26 @@
     return (v / total * 100) + '%';
   }
 
-  // Rectangle in cells -> CSS in screen percentages
+  // Rectangle in screen pixels -> CSS in screen percentages
   function rectStyle(r) {
-    var ox = W.offsets(state.grid.cols), oy = W.offsets(state.grid.rows);
-    return 'left:' + pct(ox[r.x], W.SCREEN.w) + ';top:' + pct(oy[r.y], W.SCREEN.h) +
-      ';width:' + pct(ox[r.x + r.w] - ox[r.x], W.SCREEN.w) + ';height:' + pct(oy[r.y + r.h] - oy[r.y], W.SCREEN.h);
+    return 'left:' + pct(r.x, W.SCREEN.w) + ';top:' + pct(r.y, W.SCREEN.h) +
+      ';width:' + pct(r.w, W.SCREEN.w) + ';height:' + pct(r.h, W.SCREEN.h);
   }
 
   function renderOverlay() {
     var html = '';
     if (state.showGrid) {
-      var ox = W.offsets(state.grid.cols), oy = W.offsets(state.grid.rows);
-      for (var i = 1; i < Layout.COLS; i++) {
-        html += '<i class="gl gl-v' + (resize && resize.axis === 'cols' && resize.i === i ? ' gl-active' : '') +
-          '" style="left:' + pct(ox[i], W.SCREEN.w) + '"></i>';
-      }
-      for (var j = 1; j < Layout.ROWS; j++) {
-        html += '<i class="gl gl-h' + (resize && resize.axis === 'rows' && resize.i === j ? ' gl-active' : '') +
-          '" style="top:' + pct(oy[j], W.SCREEN.h) + '"></i>';
-      }
       state.blocks.forEach(function (b) {
         var cls = b.widget === 'empty' ? ' ob-empty' : (blockFits(b) ? '' : ' ob-bad');
         html += '<div class="ob' + cls + '" style="' + rectStyle(b) + '"></div>';
       });
+      if (resize) {
+        var e = resize.edge;
+        html += '<i class="gl gl-active gl-' + (e.vertical ? 'v' : 'h') + '" style="' + (e.vertical
+          ? 'left:' + pct(resize.pos, W.SCREEN.w) + ';top:' + pct(e.from, W.SCREEN.h) + ';height:' + pct(e.to - e.from, W.SCREEN.h)
+          : 'top:' + pct(resize.pos, W.SCREEN.h) + ';left:' + pct(e.from, W.SCREEN.w) + ';width:' + pct(e.to - e.from, W.SCREEN.w)) +
+          '"></i>';
+      }
     }
     if (state.sel) {
       var n = selectedBlocks().length;
@@ -389,26 +381,56 @@
     document.documentElement.style.setProperty('--k', device / dpr);
   }
 
-  // --- grid proportions ------------------------------------------------
+  // --- block borders -------------------------------------------------------
+  //
+  // A handle sits in the middle of every border piece that can move on its
+  // own (Layout.edges): dragging it resizes only the blocks along that piece.
 
-  // Handles on the watch frame: top ones move column borders, left ones move rows
+  var shownEdges = [];
+  var SNAP = 3;  // px
+
+  // Sizes on both sides of the dragged border: "a | b" if it has one block
+  // on each side, else its position
+  function edgeLabel(blocks, e) {
+    var before = blocks.filter(function (b) { return e.before.some(function (o) { return o.id === b.id; }); });
+    var after = blocks.filter(function (b) { return e.after.some(function (o) { return o.id === b.id; }); });
+    var dim = e.vertical ? 'w' : 'h';
+    if (before.length === 1 && after.length === 1) return before[0][dim] + ' | ' + after[0][dim];
+    return (e.vertical ? 'x ' : 'y ') + resize.pos;
+  }
+
   function renderHandles() {
     var html = '';
     if (state.showGrid) {
-      ['cols', 'rows'].forEach(function (axis) {
-        var arr = state.grid[axis];
-        var off = W.offsets(arr);
-        var total = axis === 'cols' ? W.SCREEN.w : W.SCREEN.h;
-        for (var i = 1; i < arr.length; i++) {
-          var active = resize && resize.axis === axis && resize.i === i;
-          html += '<button type="button" class="gh gh-' + axis + (active ? ' active' : '') + '" data-axis="' + axis +
-            '" data-i="' + i + '" style="' + (axis === 'cols' ? 'left' : 'top') + ':' + pct(off[i], total) +
-            '" aria-label="' + esc(tr(axis === 'cols' ? 'Column border {n}' : 'Row border {n}', { n: i })) + '">' +
-            (active ? '<span>' + arr[i - 1] + ' | ' + arr[i] + '</span>' : '') + '</button>';
-        }
+      shownEdges = resize ? [resize.edge] : Layout.edges(state.blocks);
+      shownEdges.forEach(function (e, i) {
+        var at = resize ? resize.pos : e.at, mid = (e.from + e.to) / 2;
+        var x = e.vertical ? at : mid, y = e.vertical ? mid : at;
+        html += '<button type="button" class="gh gh-' + (e.vertical ? 'v' : 'h') + (resize ? ' active' : '') +
+          '" data-edge="' + i + '" style="left:' + pct(x, W.SCREEN.w) + ';top:' + pct(y, W.SCREEN.h) +
+          '" aria-label="' + esc(tr(e.vertical ? 'Border between blocks, x {at}' : 'Border between blocks, y {at}', { at: at })) +
+          '">' + (resize ? '<span>' + esc(edgeLabel(state.blocks, e)) + '</span>' : '') + '</button>';
       });
     }
     $('#handles').innerHTML = html;
+  }
+
+  // The nearest snap line within SNAP px: the even 4×4 grid and the borders
+  // of the other blocks, so blocks are easy to line up again
+  function snapPos(pos, edge, blocks) {
+    var total = edge.vertical ? W.SCREEN.w : W.SCREEN.h;
+    var lines = [];
+    var even = Layout.evenTracks(total, Layout.GRID_N);
+    for (var i = 0, o = 0; i < even.length - 1; i++) lines.push(o += even[i]);
+    blocks.forEach(function (b) {
+      if (edge.before.indexOf(b) !== -1 || edge.after.indexOf(b) !== -1) return;
+      lines.push(edge.vertical ? b.x : b.y, edge.vertical ? b.x + b.w : b.y + b.h);
+    });
+    var best = pos, dist = SNAP + 1;
+    lines.forEach(function (l) {
+      if (Math.abs(l - pos) < dist) { best = l; dist = Math.abs(l - pos); }
+    });
+    return best;
   }
 
   // A drag is followed on the document, not on the handle: renderHandles()
@@ -421,8 +443,10 @@
       var h = e.target.closest('.gh');
       if (!h || resize) return;
       e.preventDefault();
-      resize = { axis: h.getAttribute('data-axis'), i: Number(h.getAttribute('data-i')), before: snapshot(), changed: false,
-                 pointer: e.pointerId };
+      var edge = shownEdges[Number(h.getAttribute('data-edge'))];
+      if (!edge) return;
+      resize = { edge: edge, blocks: state.blocks, pos: edge.at, before: snapshot(), changed: false, pointer: e.pointerId,
+                 selIds: selectedBlocks().map(function (b) { return b.id; }) };
       document.addEventListener('pointermove', move);
       document.addEventListener('pointerup', end);
       document.addEventListener('pointercancel', end);
@@ -435,14 +459,16 @@
       // released where no pointerup reached the page (outside the window)
       if (e.pointerType === 'mouse' && !(e.buttons & 1)) return end(e);
       var p = screenPoint(e);
-      var axis = resize.axis;
-      var pos = axis === 'cols' ? p.x : p.y;
-      // snap to the even grid
-      var eq = W.offsets(W.equalGrid(Layout.COLS, Layout.ROWS)[axis])[resize.i];
-      if (Math.abs(pos - eq) <= 3) pos = eq;
-      var next = W.moveDivider(state.grid[axis], resize.i, pos);
-      if (next.join() === state.grid[axis].join()) return;
-      state.grid[axis] = next;
+      var edge = resize.edge;
+      var range = Layout.edgeRange(edge);
+      var pos = snapPos(edge.vertical ? p.x : p.y, edge, resize.blocks);
+      pos = Math.round(Math.max(range[0], Math.min(range[1], pos)));
+      if (pos === resize.pos) return;
+      resize.pos = pos;
+      state.blocks = Layout.moveEdge(resize.blocks, edge, pos);
+      // the selection follows its blocks
+      var sel = state.blocks.filter(function (b) { return resize.selIds.indexOf(b.id) !== -1; });
+      state.sel = sel.length ? sel.reduce(function (r, b) { return Layout.union(r, b); }, Layout.rectOf(sel[0])) : null;
       resize.changed = true;
       renderScreen();
       renderOverlay();
@@ -456,7 +482,7 @@
       document.removeEventListener('pointerup', end);
       document.removeEventListener('pointercancel', end);
       // the handle may have been dragged and returned; no history step needed then
-      if (resize.changed && JSON.stringify(resize.before.grid) !== JSON.stringify(state.grid)) {
+      if (resize.changed && resize.pos !== resize.edge.at) {
         history.push(resize.before);
         if (history.length > HISTORY_LIMIT) history.shift();
         coalesce = { key: null, at: 0 };
@@ -464,16 +490,6 @@
       resize = null;
       render();
     }
-  }
-
-  function isEqualGrid() {
-    var eq = W.equalGrid(Layout.COLS, Layout.ROWS);
-    return eq.cols.join() === state.grid.cols.join() && eq.rows.join() === state.grid.rows.join();
-  }
-
-  function equalizeGrid() {
-    if (isEqualGrid()) return;
-    commit(function () { state.grid = W.equalGrid(Layout.COLS, Layout.ROWS); });
   }
 
   // --- inspector ------------------------------------------------------
@@ -525,7 +541,7 @@
 
     if (sel.length > 1) {
       el.innerHTML = '<h2>' + esc(tr('Blocks selected: {n}', { n: sel.length })) + '</h2>' +
-        '<p class="muted">' + esc(tr('Area {w}×{h}. The merged block gets the widget of the largest non-empty block.',
+        '<p class="muted">' + esc(tr('Area {w}×{h} px. The merged block gets the widget of the largest non-empty block.',
           { w: state.sel.w, h: state.sel.h })) + '</p>' +
         '<button type="button" class="btn btn-accent btn-wide" data-action="merge">' + esc(tr('Merge into one block')) + '</button>';
       return;
@@ -555,16 +571,19 @@
 
     el.innerHTML =
       '<div class="insp-head"><h2>' + esc(tr('Block')) + '</h2><span class="tag">' +
-        esc(tr('{w}×{h} cells · {pw}×{ph} px', { w: b.w, h: b.h, pw: Math.round(px.w), ph: Math.round(px.h) })) + '</span></div>' +
+        esc(tr('{w}×{h} px', { w: Math.round(px.w), h: Math.round(px.h) })) + '</span></div>' +
       pickBtn +
       (def.note ? '<p class="note">' + esc(tr(def.note)) + '</p>' : '') +
       (blockFits(b) ? '' : '<p class="note">' + esc(tr(
-        'The block is smaller than the widget needs ({min} px). Make the block bigger or change the grid proportions.',
+        'The block is smaller than the widget needs ({min} px). Make the block bigger: drag its borders or merge it with a neighbor.',
         { min: W.minSize(b.widget).join('×') })) + '</p>') +
       (optsHTML ? '<div class="opts">' + optsHTML + '</div>' : '') +
       '<h3>' + esc(tr('Block colors')) + '</h3>' + colors +
       '<div class="insp-actions">' +
-        (b.w * b.h > 1 ? '<button type="button" class="btn" data-action="split">' + esc(tr('Split into cells')) + '</button>' : '') +
+        (Layout.canSplit(state.blocks, b, true) ? '<button type="button" class="btn" data-action="split-v">' +
+          esc(tr('Split left and right')) + '</button>' : '') +
+        (Layout.canSplit(state.blocks, b, false) ? '<button type="button" class="btn" data-action="split-h">' +
+          esc(tr('Split top and bottom')) + '</button>' : '') +
         (!isEmpty ? '<button type="button" class="btn" data-action="clear">' + esc(tr('Clear')) + '</button>' : '') +
       '</div>';
   }
@@ -613,7 +632,8 @@
       var a = act.getAttribute('data-action');
       if (a === 'pick') openWidgetSheet();
       if (a === 'merge') mergeSelection();
-      if (a === 'split') splitSelection();
+      if (a === 'split-v') splitSelection(true);
+      if (a === 'split-h') splitSelection(false);
       if (a === 'clear') {
         var b = selectedBlock();
         if (b) commit(function () { b.widget = 'empty'; b.opts = {}; b.bg = b.fg = b.accent = b.iconFill = null; });
@@ -906,11 +926,10 @@
   // --- presets --------------------------------------------------------
 
   function drawThumb(cv, p) {
-    var blocks = Layout.hydrate(p.layout);
+    var blocks = Layout.fromSaved(p);
     if (!blocks) return;
     Raster.drawScreen(cv, {
       blocks: blocks,
-      grid: W.normalizeGrid(p.grid, Layout.COLS, Layout.ROWS),
       theme: fullTheme(p.theme || state.theme),
       general: state.general
     });
@@ -932,13 +951,13 @@
 
   // --- my layouts (localStorage) --------------------------------------
   //
-  // A layout is the design: blocks, grid proportions and theme. General settings
+  // A layout is the design: blocks and theme. General settings
   // (units, weather) are not included.
 
   function loadUserPresets() {
     try {
       var list = JSON.parse(storageGet(USER_PRESETS_KEY) || '[]');
-      return Array.isArray(list) ? list.filter(function (p) { return p && p.id && Layout.hydrate(p.layout || []); }) : [];
+      return Array.isArray(list) ? list.filter(function (p) { return p && p.id && Layout.fromSaved(p); }) : [];
     } catch (e) {
       return [];
     }
@@ -999,8 +1018,8 @@
       list.push({
         id: Date.now().toString(36) + Math.floor(Math.random() * 1e4).toString(36),
         name: name,
+        v: cfg.v,
         layout: cfg.layout,
-        grid: cfg.grid,
         theme: cfg.theme
       });
       var saved = saveUserPresets(list);
@@ -1109,8 +1128,8 @@
     var one = selectedBlock();
     $('#undoBtn').disabled = !history.length;
     $('#mergeBtn').disabled = sel.length < 2;
-    $('#splitBtn').disabled = !one || one.w * one.h === 1;
-    $('#gridEqualBtn').disabled = isEqualGrid();
+    $('#splitVBtn').disabled = !one || !Layout.canSplit(state.blocks, one, true);
+    $('#splitHBtn').disabled = !one || !Layout.canSplit(state.blocks, one, false);
     $('#gridToggle').checked = state.showGrid;
   }
 
@@ -1155,8 +1174,8 @@
     bindLocation();
 
     $('#mergeBtn').addEventListener('click', mergeSelection);
-    $('#splitBtn').addEventListener('click', splitSelection);
-    $('#gridEqualBtn').addEventListener('click', equalizeGrid);
+    $('#splitVBtn').addEventListener('click', function () { splitSelection(true); });
+    $('#splitHBtn').addEventListener('click', function () { splitSelection(false); });
     $('#undoBtn').addEventListener('click', undo);
     $('#gridToggle').addEventListener('change', function (e) {
       state.showGrid = e.target.checked;
